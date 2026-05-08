@@ -1,0 +1,874 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>BaqshAI · Smart Farm</title>
+
+  <style>
+    *{
+      margin:0;
+      padding:0;
+      box-sizing:border-box;
+      font-family:'Segoe UI',Roboto,sans-serif;
+    }
+
+    :root{
+      --bg:#0a0f0a;
+      --card:#141d14;
+      --accent:#4caf50;
+      --warning:#ff9800;
+      --danger:#f44336;
+      --text:#e0e0d0;
+      --text2:#8a9a8a;
+    }
+
+    body{
+      background:var(--bg);
+      color:var(--text);
+      min-height:100vh;
+      display:flex;
+      justify-content:center;
+    }
+
+    .app{
+      width:100%;
+      max-width:480px;
+      padding:16px;
+      padding-bottom:100px;
+    }
+
+    .workflow-title{
+      background:#0d5c2b;
+      padding:16px;
+      border-radius:18px;
+      text-align:center;
+      font-weight:800;
+      margin-bottom:18px;
+      box-shadow:0 10px 25px rgba(0,0,0,.3);
+    }
+
+    .page{
+      display:none;
+    }
+
+    .page.active{
+      display:block;
+    }
+
+    .card{
+      background:var(--card);
+      border-radius:22px;
+      padding:16px;
+      margin-bottom:16px;
+      border:1px solid #202a20;
+    }
+
+    .btn{
+      width:100%;
+      background:var(--accent);
+      color:white;
+      border:none;
+      padding:14px;
+      border-radius:14px;
+      font-weight:bold;
+      cursor:pointer;
+      font-size:1rem;
+    }
+
+    .btn:disabled{
+      background:#333;
+      color:#777;
+    }
+
+    .status-badge{
+      padding:4px 10px;
+      border-radius:8px;
+      font-size:.7rem;
+      font-weight:bold;
+    }
+
+    .bg-danger{
+      background:var(--danger);
+      color:white;
+    }
+
+    .farmer-profile{
+      display:flex;
+      align-items:center;
+      gap:12px;
+      margin-bottom:18px;
+    }
+
+    .farmer-img{
+      width:60px;
+      height:60px;
+      border-radius:50%;
+      object-fit:cover;
+      border:3px solid var(--accent);
+    }
+
+    .weather-strip{
+      display:flex;
+      gap:10px;
+      overflow-x:auto;
+      scrollbar-width:none;
+    }
+
+    .weather-day{
+      background:#1a251a;
+      min-width:65px;
+      border-radius:12px;
+      text-align:center;
+      padding:10px;
+    }
+
+    /* .map-view{
+      width:100%;
+      height:350px;
+      border-radius:20px;
+      overflow:hidden;
+      position:relative;
+      border:1px solid #333;
+
+      background:
+      url('https://images.unsplash.com/photo-1500937386664-56d1dfef3854?q=80&w=1400');
+
+      background-size:cover;
+      background-position:center;
+    } */
+     .map-view{
+        width:100%;
+        height:350px;
+        border-radius:20px;
+        overflow:hidden;
+        position:relative;
+        border:1px solid #333;
+
+        background:
+        url('https://assets.bwbx.io/images/users/iqjWHBFdfxIU/iVEMbXiJu__w/v1/-1x-1.webp');
+
+        background-size:cover;
+        background-position:center;
+      }
+
+    /* .sick-zone{
+      position:absolute;
+      top:45%;
+      left:60%;
+      width:70px;
+      height:70px;
+      border-radius:50%;
+      border:3px dashed var(--danger);
+      background:rgba(244,67,54,.25);
+      animation:pulse 2s infinite;
+    }
+
+    .infected-zone{
+      position:absolute;
+      left:18%;
+      top:22%;
+      width:90px;
+      height:70px;
+      background:rgba(255,152,0,.3);
+      border:3px solid var(--warning);
+      border-radius:16px;
+      padding:6px;
+      font-size:.7rem;
+      font-weight:bold;
+    } */
+        .infected-zone{
+      position:absolute;
+
+      left:10px; /* moved more left */
+      top:22%;
+
+      width:90px;
+      height:70px;
+
+      background:rgba(255,152,0,.3);
+      border:3px solid var(--warning);
+      border-radius:16px;
+
+      padding:6px;
+      font-size:.7rem;
+      font-weight:bold;
+    }
+
+    .sick-zone{
+      position:absolute;
+
+      top:calc(45% + 45px); /* moved 30px down */
+      left:60%;
+
+      width:70px;
+      height:70px;
+
+      border-radius:50%;
+      border:3px dashed var(--danger);
+
+      background:rgba(244,67,54,.25);
+
+      animation:pulse 2s infinite;
+    }
+
+    .drone-map{
+      position:absolute;
+      width:70px;
+      right:15%;
+      top:18%;
+      animation:droneFly 4s infinite ease-in-out;
+      filter:drop-shadow(0 0 12px cyan);
+    }
+
+    .drone-img{
+      width:100%;
+      height:170px;
+      object-fit:cover;
+      border-radius:14px;
+      margin-bottom:10px;
+    }
+
+    .bar-container{
+      height:8px;
+      background:#000;
+      border-radius:10px;
+      overflow:hidden;
+      margin-top:6px;
+    }
+
+    .bar-fill{
+      height:100%;
+      background:var(--accent);
+    }
+
+    .nav-bar{
+      position:fixed;
+      bottom:0;
+      width:100%;
+      max-width:480px;
+      display:flex;
+      justify-content:space-around;
+      background:rgba(10,15,10,.96);
+      backdrop-filter:blur(10px);
+      padding:10px 0;
+      border-top:1px solid #222;
+      z-index:999;
+    }
+
+    .nav-item{
+      color:var(--text2);
+      display:flex;
+      flex-direction:column;
+      align-items:center;
+      font-size:.65rem;
+      gap:4px;
+      flex:1;
+      cursor:pointer;
+      transition:.2s;
+    }
+
+    .nav-item.active{
+      color:var(--accent);
+    }
+
+    .nav-item svg{
+      width:22px;
+      height:22px;
+      fill:currentColor;
+    }
+
+    .live-badge{
+      position:absolute;
+      top:10px;
+      left:10px;
+      background:red;
+      color:white;
+      padding:5px 10px;
+      border-radius:8px;
+      font-size:.7rem;
+      font-weight:bold;
+    }
+
+    @keyframes pulse{
+      0%{
+        transform:scale(1);
+        opacity:.4;
+      }
+      50%{
+        transform:scale(1.1);
+        opacity:.8;
+      }
+      100%{
+        transform:scale(1);
+        opacity:.4;
+      }
+    }
+
+    @keyframes droneFly{
+      0%{
+        transform:translateY(0px);
+      }
+      50%{
+        transform:translateY(-10px);
+      }
+      100%{
+        transform:translateY(0px);
+      }
+    }
+
+  </style>
+</head>
+
+<body>
+
+<div class="app">
+
+  <div class="workflow-title">
+    TARGETED SPOT-SPRAYING · PRECISION AGRICULTURE WORKFLOW
+  </div>
+
+  <!-- MAIN -->
+
+  <div id="main" class="page active">
+
+    <div class="farmer-profile">
+
+      <img
+      src="https://images.unsplash.com/photo-1500648767791-00dcc994a43e?q=80&w=500"
+      class="farmer-img">
+
+      <div>
+        <strong>Welcome, Farmer John</strong>
+
+        <p style="font-size:.75rem;color:var(--text2)">
+          System Status: Online
+        </p>
+      </div>
+
+    </div>
+
+    <div class="card"
+      style="border-left:5px solid var(--danger);cursor:pointer;"
+      onclick="navigateTo('map')">
+
+      <div style="display:flex;justify-content:space-between;align-items:center;">
+
+        <div>
+          <strong style="color:var(--danger)">
+            ALERT: FIELD #4 INFECTED
+          </strong>
+
+          <p style="font-size:.85rem;color:var(--text2)">
+            AI detected disease anomaly in corn field.
+          </p>
+        </div>
+
+        <span class="status-badge bg-danger">
+          ACTION
+        </span>
+
+      </div>
+
+    </div>
+
+    <div class="card"
+      style="border-left:5px solid var(--warning);">
+
+      <strong style="color:var(--warning)">
+        WEATHER WARNING
+      </strong>
+
+      <p style="margin-top:8px;color:var(--text2);font-size:.85rem;">
+        Rain expected tomorrow. Recommended spraying today.
+      </p>
+
+    </div>
+
+    <div class="card">
+
+      <h4 style="margin-bottom:10px;">
+        Weather Forecast
+      </h4>
+
+      <div class="weather-strip">
+
+        <div class="weather-day">Mon<br>☀️<br>24°</div>
+        <div class="weather-day">Tue<br>☀️<br>26°</div>
+        <div class="weather-day">Wed<br>⛅<br>22°</div>
+        <div class="weather-day">Thu<br>🌧️<br>18°</div>
+        <div class="weather-day">Fri<br>☀️<br>25°</div>
+
+      </div>
+
+    </div>
+
+  </div>
+
+  <!-- MAP -->
+
+  <div id="map" class="page">
+
+    <h3>Satellite Field Mapping</h3>
+
+    <p style="color:var(--text2);font-size:.82rem;margin:8px 0 12px;">
+      AI monitoring active for corn plantation.
+    </p>
+
+    <div class="map-view">
+
+      <div class="infected-zone">
+        Infected Zone
+      </div>
+
+      <div class="sick-zone"
+        onclick="navigateTo('analyze')">
+      </div>
+
+      <!-- <img
+      src="https://cdn-icons-png.flaticon.com/512/744/744465.png"
+      class="drone-map"> -->
+
+      <div class="live-badge">
+        ● LIVE
+      </div>
+
+    </div>
+
+    <button class="btn"
+      style="margin-top:16px"
+      onclick="navigateTo('analyze')">
+
+      Analyze Sick Zone
+
+    </button>
+
+  </div>
+
+  <!-- DRONES -->
+
+  <div id="drones" class="page">
+
+    <h3>Drone Fleet</h3>
+
+    <div class="card">
+
+      <img
+      src="https://images.unsplash.com/photo-1473968512647-3e447244af8f?q=80&w=1000"
+      class="drone-img">
+
+      <div style="display:flex;justify-content:space-between;">
+
+        <strong>Baqsh-N2 Sprayer Drone</strong>
+
+        <span class="status-badge"
+          style="background:var(--accent);">
+
+          READY
+
+        </span>
+
+      </div>
+
+      <div style="margin-top:12px;font-size:.85rem;">
+        Battery: 94%
+      </div>
+
+      <div class="bar-container">
+        <div class="bar-fill"
+          style="width:94%">
+        </div>
+      </div>
+
+      <div style="margin-top:16px;font-size:.82rem;color:var(--text2);">
+        AI-powered spraying drone equipped with disease
+        recognition system and autonomous navigation.
+      </div>
+
+    </div>
+
+  </div>
+
+  <!-- ANALYZE -->
+
+  <div id="analyze" class="page">
+
+    <div class="card">
+
+      <h3>AI Diagnosis — Field #4</h3>
+
+      <div style="
+        height:190px;
+        margin:16px 0;
+        border-radius:16px;
+        background:
+        radial-gradient(circle at 60% 50%, rgba(255,0,0,.4), transparent),
+        url('https://images.unsplash.com/photo-1523348837708-15d4a09cfac2?q=80&w=1000');
+        background-size:cover;
+        background-position:center;
+      "></div>
+
+      <p>
+        <strong>Result:</strong>
+        91% Probability of Anthracnose Disease
+      </p>
+
+      <p style="
+        margin-top:10px;
+        color:var(--text2);
+        font-size:.85rem;
+      ">
+        Immediate targeted spraying recommended
+        to prevent disease spreading.
+      </p>
+
+    </div>
+
+    <button class="btn"
+      onclick="navigateTo('camera')">
+
+      Open Drone Camera
+
+    </button>
+
+    <button class="btn"
+      style="margin-top:12px;"
+      onclick="navigateTo('spray')">
+
+      Prepare Spraying
+
+    </button>
+
+  </div>
+
+  <!-- CAMERA -->
+
+  <div id="camera" class="page">
+
+    <h3>Live Drone Camera</h3>
+
+    <div class="card">
+
+      <div style="
+        height:260px;
+        border-radius:18px;
+        overflow:hidden;
+        position:relative;
+        background:
+        url('https://images.unsplash.com/photo-1500937386664-56d1dfef3854?q=80&w=1400');
+        background-size:cover;
+        background-position:center;
+      ">
+
+        <div style="
+          position:absolute;
+          inset:0;
+          background:
+          radial-gradient(circle at 60% 50%,
+          rgba(255,0,0,.35), transparent);
+        "></div>
+
+        <div class="live-badge">
+          ● LIVE AI SCAN
+        </div>
+
+      </div>
+
+      <button class="btn"
+        style="margin-top:14px;">
+
+        Capture Screenshot
+
+      </button>
+
+    </div>
+
+  </div>
+
+  <!-- STATS -->
+
+  <div id="stats" class="page">
+
+    <h3>Farm Analytics</h3>
+
+    <div class="card">
+
+      <div style="display:flex;justify-content:space-between;">
+        <strong>Farm Health</strong>
+        <strong style="color:var(--accent)">82%</strong>
+      </div>
+
+      <div class="bar-container"
+        style="margin-top:10px;">
+
+        <div class="bar-fill"
+          style="width:82%">
+        </div>
+
+      </div>
+
+      <div style="
+        display:grid;
+        grid-template-columns:1fr 1fr;
+        gap:12px;
+        margin-top:18px;
+      ">
+
+        <div class="card">
+          <h2>14</h2>
+          <p style="color:var(--text2);font-size:.8rem;">
+            Healthy Fields
+          </p>
+        </div>
+
+        <div class="card">
+          <h2 style="color:var(--danger)">2</h2>
+          <p style="color:var(--text2);font-size:.8rem;">
+            Critical Fields
+          </p>
+        </div>
+
+        <div class="card">
+          <h2>4</h2>
+          <p style="color:var(--text2);font-size:.8rem;">
+            Active Drones
+          </p>
+        </div>
+
+        <div class="card">
+          <h2>42%</h2>
+          <p style="color:var(--text2);font-size:.8rem;">
+            Chemical Saved
+          </p>
+        </div>
+
+      </div>
+
+    </div>
+
+  </div>
+
+  <!-- SPRAY -->
+
+  <div id="spray" class="page">
+
+    <div class="card"
+      style="text-align:center;">
+
+      <h3>Targeted Spot-Spraying</h3>
+
+      <div id="flow-visual"
+        style="font-size:4rem;margin:20px 0;">
+
+        🚁
+
+      </div>
+
+      <div id="flow-status"
+        style="font-weight:bold;margin-bottom:12px;">
+
+        Ready for Mission
+
+      </div>
+
+      <div id="flow-progress"
+        style="width:85%;margin:auto;display:none;">
+
+        <div class="bar-container">
+          <div id="flow-bar"
+            class="bar-fill"
+            style="width:0%">
+          </div>
+        </div>
+
+      </div>
+
+      <button class="btn"
+        id="start-btn"
+        style="margin-top:20px;"
+        onclick="runWorkflow()">
+
+        Start Spraying
+
+      </button>
+
+    </div>
+
+  </div>
+
+  <!-- NAV -->
+
+  <div class="nav-bar">
+
+    <div class="nav-item active"
+      onclick="navigateTo('main',this)">
+
+      <svg viewBox="0 0 24 24">
+        <path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/>
+      </svg>
+
+      <span>Main</span>
+
+    </div>
+
+    <div class="nav-item"
+      onclick="navigateTo('map',this)">
+
+      <svg viewBox="0 0 24 24">
+        <path d="M20.5 3l-.16.03L15 5.1 9 3 3.36 4.9c-.21.07-.36.25-.36.48V20.5c0 .28.22.5.5.5l.16-.03L9 18.9l6 2.1 5.64-1.9c.21-.07.36-.25.36-.48V3.5c0-.28-.22-.5-.5-.5z"/>
+      </svg>
+
+      <span>Map</span>
+
+    </div>
+
+    <div class="nav-item"
+      onclick="navigateTo('drones',this)">
+
+      <svg viewBox="0 0 24 24">
+        <path d="M21 16.5c0 .38-.21.71-.53.88l-7.97 4.47c-.31.17-.69.17-1 0l-7.97-4.47c-.32-.17-.53-.5-.53-.88V7.5c0-.38.21-.71.53-.88l7.97-4.47c.31-.17.69-.17 1 0l7.97 4.47c.32.17.53.5.53.88v9z"/>
+      </svg>
+
+      <span>Drones</span>
+
+    </div>
+
+    <div class="nav-item"
+      onclick="navigateTo('stats',this)">
+
+      <svg viewBox="0 0 24 24">
+        <path d="M3 13h2v-2H3v2zm4 6h2V5H7v14zm4-4h2V9h-2v6zm4 4h2V3h-2v16zm4-8v2h2v-2h-2z"/>
+      </svg>
+
+      <span>Stats</span>
+
+    </div>
+
+    <div class="nav-item"
+      onclick="navigateTo('spray',this)">
+
+      <svg viewBox="0 0 24 24">
+        <path d="M12 2L4.5 20.29l.71.71L12 18l6.79 3 .71-.71z"/>
+      </svg>
+
+      <span>Spray</span>
+
+    </div>
+
+  </div>
+
+</div>
+
+<audio id="successSound">
+  <source src="https://assets.mixkit.co/active_storage/sfx/2013/2013-preview.mp3" type="audio/mpeg">
+</audio>
+
+<script>
+
+function navigateTo(pageId, el){
+
+  document.querySelectorAll('.page')
+  .forEach(p => p.classList.remove('active'));
+
+  document.getElementById(pageId)
+  .classList.add('active');
+
+  if(el){
+
+    document.querySelectorAll('.nav-item')
+    .forEach(item => item.classList.remove('active'));
+
+    el.classList.add('active');
+  }
+}
+
+function runWorkflow(){
+
+  const btn =
+    document.getElementById('start-btn');
+
+  const status =
+    document.getElementById('flow-status');
+
+  const progress =
+    document.getElementById('flow-progress');
+
+  const bar =
+    document.getElementById('flow-bar');
+
+  const visual =
+    document.getElementById('flow-visual');
+
+  btn.disabled = true;
+
+  status.innerText =
+    "Initializing AI System...";
+
+  visual.innerText = "🛰️";
+
+  setTimeout(() => {
+
+    status.innerText =
+      "Scanning Crop Health...";
+
+    visual.innerText = "📡";
+
+  }, 1500);
+
+  setTimeout(() => {
+
+    progress.style.display = "block";
+
+    status.innerText =
+      "Drone Launching...";
+
+    visual.innerText = "🚁";
+
+  }, 3000);
+
+  setTimeout(() => {
+
+    status.innerText =
+      "Targeted Spraying Started...";
+
+    let p = 0;
+
+    const interval = setInterval(() => {
+
+      p += 4;
+
+      bar.style.width = p + "%";
+
+      if(p >= 100){
+
+        clearInterval(interval);
+
+        visual.innerText = "✅";
+
+        status.innerText =
+          "Mission Completed Successfully!";
+
+        document
+        .getElementById('successSound')
+        .play();
+
+        btn.disabled = false;
+
+        btn.innerText =
+          "Return to Dashboard";
+
+        btn.onclick = () =>
+          navigateTo('main');
+
+      }
+
+    }, 140);
+
+  }, 4500);
+
+}
+
+</script>
+
+</body>
+</html>
