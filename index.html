@@ -1,873 +1,1419 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8"/>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>BaqshAI · Smart Farm</title>
-
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <meta name="theme-color" content="#0a0f0a">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <title>baqshAI · AgroVision Sentinel</title>
   <style>
-    *{
-      margin:0;
-      padding:0;
-      box-sizing:border-box;
-      font-family:'Segoe UI',Roboto,sans-serif;
+    :root {
+      --bg: #050805;
+      --surface: #0f160f;
+      --elevated: #1a231a;
+      --border: #2a352a;
+      --accent: #22c55e;
+      --accent-glow: rgba(34,197,94,0.3);
+      --warning: #f59e0b;
+      --danger: #ef4444;
+      --info: #3b82f6;
+      --text: #f0fdf0;
+      --text-secondary: #86a386;
+      --text-muted: #5c7a5c;
+      --radius-sm: 10px;
+      --radius-md: 16px;
+      --radius-lg: 24px;
+      --space-xs: 6px;
+      --space-sm: 10px;
+      --space-md: 16px;
+      --space-lg: 24px;
+      --header-height: 64px;
+      --nav-height: 72px;
     }
 
-    :root{
-      --bg:#0a0f0a;
-      --card:#141d14;
-      --accent:#4caf50;
-      --warning:#ff9800;
-      --danger:#f44336;
-      --text:#e0e0d0;
-      --text2:#8a9a8a;
+    * { margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color:transparent; touch-action:manipulation; }
+    html { font-size: 16px; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.45;
+      overflow-x: hidden;
+      -webkit-font-smoothing: antialiased;
     }
 
-    body{
-      background:var(--bg);
-      color:var(--text);
-      min-height:100vh;
-      display:flex;
-      justify-content:center;
+    /* Scrollbar */
+    ::-webkit-scrollbar { width: 4px; height: 4px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 4px; }
+
+    /* Layout */
+    .app-shell {
+      max-width: 540px;
+      margin: 0 auto;
+      min-height: 100vh;
+      padding-bottom: calc(var(--nav-height) + var(--space-md));
+      position: relative;
     }
 
-    .app{
-      width:100%;
-      max-width:480px;
-      padding:16px;
-      padding-bottom:100px;
+    /* Header */
+    .app-header {
+      position: sticky;
+      top: 0;
+      z-index: 50;
+      background: rgba(5,8,5,0.92);
+      backdrop-filter: blur(12px);
+      border-bottom: 1px solid var(--border);
+      height: var(--header-height);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 var(--space-md);
+    }
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: var(--space-sm);
+    }
+    .brand-icon {
+      width: 36px; height: 36px;
+      background: linear-gradient(135deg, var(--accent), #16a34a);
+      border-radius: var(--radius-sm);
+      display: grid; place-items: center;
+      font-weight: 800; font-size: 0.85rem;
+      color: #fff;
+      box-shadow: 0 0 20px var(--accent-glow);
+    }
+    .brand-text { font-weight: 700; font-size: 1.1rem; letter-spacing: -0.3px; }
+    .brand-sub { font-size: 0.65rem; color: var(--text-muted); font-weight: 500; text-transform: uppercase; letter-spacing: 0.5px; }
+    .header-actions { display: flex; gap: var(--space-sm); align-items: center; }
+    .icon-btn {
+      width: 40px; height: 40px;
+      border-radius: var(--radius-sm);
+      background: var(--elevated);
+      border: 1px solid var(--border);
+      color: var(--text-secondary);
+      display: grid; place-items: center;
+      cursor: pointer;
+      transition: all 0.2s;
+      position: relative;
+    }
+    .icon-btn:active { transform: scale(0.92); background: var(--border); }
+    .badge {
+      position: absolute; top: -2px; right: -2px;
+      width: 18px; height: 18px;
+      background: var(--danger);
+      color: #fff; font-size: 0.6rem; font-weight: 700;
+      border-radius: 50%; display: grid; place-items: center;
+      border: 2px solid var(--bg);
     }
 
-    .workflow-title{
-      background:#0d5c2b;
-      padding:16px;
-      border-radius:18px;
-      text-align:center;
-      font-weight:800;
-      margin-bottom:18px;
-      box-shadow:0 10px 25px rgba(0,0,0,.3);
+    /* Language Switcher */
+    .lang-switch {
+      display: flex;
+      background: var(--elevated);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      overflow: hidden;
+      font-size: 0.75rem; font-weight: 600;
+    }
+    .lang-switch button {
+      background: transparent; border: none; color: var(--text-muted);
+      padding: 6px 10px; cursor: pointer; transition: 0.2s;
+    }
+    .lang-switch button.active { background: var(--accent); color: #fff; }
+
+    /* Pages */
+    .page { display: none; animation: fadeIn 0.3s ease; }
+    .page.active { display: block; }
+    @keyframes fadeIn { from { opacity:0; transform: translateY(8px); } to { opacity:1; transform: translateY(0); } }
+
+    /* Cards */
+    .card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      padding: var(--space-md);
+      margin-bottom: var(--space-md);
+      position: relative;
+      overflow: hidden;
+    }
+    .card::before {
+      content: ''; position: absolute; inset: 0; border-radius: inherit;
+      padding: 1px; background: linear-gradient(180deg, rgba(255,255,255,0.06), transparent);
+      mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0); mask-composite: exclude; -webkit-mask-composite: xor;
+      pointer-events: none;
+    }
+    .card-header {
+      display: flex; justify-content: space-between; align-items: flex-start;
+      margin-bottom: var(--space-sm);
+    }
+    .card-title { font-size: 0.95rem; font-weight: 700; }
+    .card-sub { font-size: 0.8rem; color: var(--text-secondary); margin-top: 2px; }
+
+    /* Status Indicators */
+    .status-pill {
+      display: inline-flex; align-items: center; gap: 6px;
+      padding: 4px 10px; border-radius: 100px;
+      font-size: 0.7rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.3px;
+    }
+    .status-pill::before {
+      content: ''; width: 6px; height: 6px; border-radius: 50%; background: currentColor;
+    }
+    .pill-success { background: rgba(34,197,94,0.12); color: var(--accent); }
+    .pill-warning { background: rgba(245,158,11,0.12); color: var(--warning); }
+    .pill-danger { background: rgba(239,68,68,0.12); color: var(--danger); }
+    .pill-info { background: rgba(59,130,246,0.12); color: var(--info); }
+
+    /* Alert Banner */
+    .alert-banner {
+      background: linear-gradient(90deg, rgba(239,68,68,0.15), rgba(239,68,68,0.05));
+      border: 1px solid rgba(239,68,68,0.3);
+      border-radius: var(--radius-lg);
+      padding: var(--space-md);
+      display: flex; gap: var(--space-md); align-items: center;
+      margin-bottom: var(--space-md); cursor: pointer;
+      transition: 0.2s;
+    }
+    .alert-banner:active { transform: scale(0.99); }
+    .alert-icon {
+      width: 44px; height: 44px; border-radius: var(--radius-md);
+      background: rgba(239,68,68,0.2); color: var(--danger);
+      display: grid; place-items: center; flex-shrink: 0;
+      font-size: 1.2rem;
+    }
+    .alert-content h4 { font-size: 0.9rem; color: #fecaca; }
+    .alert-content p { font-size: 0.8rem; color: var(--text-secondary); margin-top: 2px; }
+
+    /* Sensor Grid */
+    .sensor-grid {
+      display: grid; grid-template-columns: repeat(2, 1fr); gap: var(--space-sm);
+      margin-bottom: var(--space-md);
+    }
+    .sensor-card {
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: var(--radius-md); padding: var(--space-md);
+      position: relative;
+    }
+    .sensor-label { font-size: 0.7rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px; font-weight: 600; }
+    .sensor-value { font-size: 1.6rem; font-weight: 800; margin-top: 4px; letter-spacing: -0.5px; }
+    .sensor-unit { font-size: 0.75rem; color: var(--text-secondary); font-weight: 500; }
+    .sensor-spark {
+      position: absolute; bottom: var(--space-sm); right: var(--space-sm);
+      width: 40px; height: 24px; opacity: 0.6;
     }
 
-    .page{
-      display:none;
+    /* Weather Strip */
+    .weather-container { margin-bottom: var(--space-md); }
+    .weather-scroll {
+      display: flex; gap: var(--space-sm); overflow-x: auto; padding: 4px 0;
+      scrollbar-width: none;
+    }
+    .weather-scroll::-webkit-scrollbar { display: none; }
+    .weather-day {
+      min-width: 64px; background: var(--surface); border: 1px solid var(--border);
+      border-radius: var(--radius-md); padding: var(--space-sm);
+      text-align: center; flex-shrink: 0;
+    }
+    .weather-day-name { font-size: 0.65rem; color: var(--text-muted); font-weight: 600; text-transform: uppercase; }
+    .weather-day-icon { font-size: 1.4rem; margin: 6px 0; }
+    .weather-day-temp { font-size: 0.9rem; font-weight: 700; }
+    .weather-day-rain { font-size: 0.65rem; color: var(--info); margin-top: 2px; }
+
+    /* Field Status Cards */
+    .field-status-grid {
+      display: grid; grid-template-columns: repeat(3, 1fr); gap: var(--space-sm);
+      margin-bottom: var(--space-md);
+    }
+    .field-stat {
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: var(--radius-md); padding: var(--space-sm);
+      text-align: center;
+    }
+    .field-stat-num { font-size: 1.4rem; font-weight: 800; }
+    .field-stat-label { font-size: 0.7rem; color: var(--text-secondary); margin-top: 2px; font-weight: 500; }
+    .field-stat.healthy .field-stat-num { color: var(--accent); }
+    .field-stat.risk .field-stat-num { color: var(--warning); }
+    .field-stat.critical .field-stat-num { color: var(--danger); }
+
+    /* Buttons */
+    .btn {
+      width: 100%; border: none; border-radius: var(--radius-md);
+      padding: 16px; font-size: 1rem; font-weight: 700;
+      cursor: pointer; transition: all 0.2s; display: inline-flex;
+      align-items: center; justify-content: center; gap: var(--space-sm);
+      position: relative; overflow: hidden;
+    }
+    .btn:active { transform: scale(0.98); }
+    .btn-primary { background: var(--accent); color: #052e16; }
+    .btn-primary:hover { background: #16a34a; }
+    .btn-secondary { background: var(--elevated); color: var(--text); border: 1px solid var(--border); }
+    .btn-danger { background: var(--danger); color: #fff; }
+    .btn:disabled { opacity: 0.5; cursor: not-allowed; }
+    .btn-row { display: flex; gap: var(--space-sm); }
+    .btn-row .btn { flex: 1; }
+
+    /* Progress Bars */
+    .progress-track {
+      height: 8px; background: rgba(255,255,255,0.06);
+      border-radius: 100px; overflow: hidden; margin-top: var(--space-sm);
+    }
+    .progress-fill {
+      height: 100%; border-radius: 100px;
+      transition: width 0.6s cubic-bezier(0.4,0,0.2,1);
+      position: relative;
+    }
+    .progress-fill::after {
+      content: ''; position: absolute; right: 0; top: 0; bottom: 0;
+      width: 12px; background: linear-gradient(90deg, transparent, rgba(255,255,255,0.3));
     }
 
-    .page.active{
-      display:block;
-    }
-
-    .card{
-      background:var(--card);
-      border-radius:22px;
-      padding:16px;
-      margin-bottom:16px;
-      border:1px solid #202a20;
-    }
-
-    .btn{
-      width:100%;
-      background:var(--accent);
-      color:white;
-      border:none;
-      padding:14px;
-      border-radius:14px;
-      font-weight:bold;
-      cursor:pointer;
-      font-size:1rem;
-    }
-
-    .btn:disabled{
-      background:#333;
-      color:#777;
-    }
-
-    .status-badge{
-      padding:4px 10px;
-      border-radius:8px;
-      font-size:.7rem;
-      font-weight:bold;
-    }
-
-    .bg-danger{
-      background:var(--danger);
-      color:white;
-    }
-
-    .farmer-profile{
-      display:flex;
-      align-items:center;
-      gap:12px;
-      margin-bottom:18px;
-    }
-
-    .farmer-img{
-      width:60px;
-      height:60px;
-      border-radius:50%;
-      object-fit:cover;
-      border:3px solid var(--accent);
-    }
-
-    .weather-strip{
-      display:flex;
-      gap:10px;
-      overflow-x:auto;
-      scrollbar-width:none;
-    }
-
-    .weather-day{
-      background:#1a251a;
-      min-width:65px;
-      border-radius:12px;
-      text-align:center;
-      padding:10px;
-    }
-
-    /* .map-view{
-      width:100%;
-      height:350px;
-      border-radius:20px;
-      overflow:hidden;
-      position:relative;
-      border:1px solid #333;
-
-      background:
-      url('https://images.unsplash.com/photo-1500937386664-56d1dfef3854?q=80&w=1400');
-
-      background-size:cover;
-      background-position:center;
-    } */
-     .map-view{
-        width:100%;
-        height:350px;
-        border-radius:20px;
-        overflow:hidden;
-        position:relative;
-        border:1px solid #333;
-
-        background:
+    /* Map Page */
+    .map-container {
+      height: 420px; border-radius: var(--radius-lg);
+      background: 
+        linear-gradient(180deg, rgba(10,20,10,0.3), rgba(10,20,10,0.6)),
         url('https://assets.bwbx.io/images/users/iqjWHBFdfxIU/iVEMbXiJu__w/v1/-1x-1.webp');
+      background-size: cover; background-position: center;
+      position: relative; overflow: hidden; border: 1px solid var(--border);
+    }
+    .map-layer-ctrl {
+      position: absolute; top: var(--space-sm); left: var(--space-sm);
+      display: flex; gap: 4px; background: rgba(5,8,5,0.85);
+      backdrop-filter: blur(8px); padding: 4px; border-radius: var(--radius-sm);
+      border: 1px solid var(--border); z-index: 10;
+    }
+    .map-layer-ctrl button {
+      background: transparent; border: none; color: var(--text-muted);
+      padding: 6px 12px; border-radius: 6px; font-size: 0.7rem; font-weight: 600;
+      cursor: pointer; transition: 0.2s; white-space: nowrap;
+    }
+    .map-layer-ctrl button.active { background: var(--accent); color: #052e16; }
+    .map-legend {
+      position: absolute; bottom: var(--space-sm); right: var(--space-sm);
+      background: rgba(5,8,5,0.9); backdrop-filter: blur(8px);
+      border: 1px solid var(--border); border-radius: var(--radius-sm);
+      padding: var(--space-sm); font-size: 0.7rem;
+    }
+    .legend-item { display: flex; align-items: center; gap: 6px; margin-bottom: 4px; }
+    .legend-dot { width: 8px; height: 8px; border-radius: 50%; }
 
-        background-size:cover;
-        background-position:center;
-      }
+    /* Field Polygons (abstract representation) */
+    .field-poly {
+      position: absolute; border: 2px solid rgba(255,255,255,0.3);
+      border-radius: 8px; display: flex; align-items: center; justify-content: center;
+      font-size: 0.65rem; font-weight: 700; color: rgba(255,255,255,0.9);
+      text-shadow: 0 1px 4px rgba(0,0,0,0.8); cursor: pointer;
+      transition: 0.3s;
+    }
+    .field-poly:hover { border-color: var(--accent); background: rgba(34,197,94,0.1); }
+    .field-poly.f1 { left: 8%; top: 12%; width: 35%; height: 28%; background: rgba(34,197,94,0.08); }
+    .field-poly.f2 { left: 50%; top: 8%; width: 42%; height: 32%; background: rgba(245,158,11,0.08); border-color: var(--warning); }
+    .field-poly.f3 { left: 10%; top: 48%; width: 38%; height: 40%; background: rgba(34,197,94,0.08); }
+    .field-poly.f4 { left: 54%; top: 46%; width: 40%; height: 44%; background: rgba(239,68,68,0.1); border-color: var(--danger); border-style: dashed; }
 
-    /* .sick-zone{
-      position:absolute;
-      top:45%;
-      left:60%;
-      width:70px;
-      height:70px;
-      border-radius:50%;
-      border:3px dashed var(--danger);
-      background:rgba(244,67,54,.25);
-      animation:pulse 2s infinite;
+    /* Hotspots */
+    .hotspot {
+      position: absolute; border-radius: 50%;
+      animation: pulse-ring 2.5s cubic-bezier(0.4,0,0.6,1) infinite;
+      cursor: pointer;
+    }
+    .hotspot::after {
+      content: ''; position: absolute; inset: -8px;
+      border-radius: 50%; border: 2px dashed var(--danger);
+      animation: spin 12s linear infinite;
+    }
+    .hotspot-core {
+      position: absolute; inset: 0; border-radius: 50%;
+      background: radial-gradient(circle, rgba(239,68,68,0.5), transparent 70%);
+    }
+    .hotspot-label {
+      position: absolute; top: 50%; left: 50%; transform: translate(-50%,-50%);
+      font-size: 0.65rem; font-weight: 700; color: #fff; white-space: nowrap;
+      text-shadow: 0 1px 3px rgba(0,0,0,0.9); pointer-events: none;
+    }
+    @keyframes pulse-ring {
+      0% { transform: scale(0.95); opacity: 0.7; }
+      50% { transform: scale(1.15); opacity: 1; }
+      100% { transform: scale(0.95); opacity: 0.7; }
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* Drone Marker on Map */
+    .drone-marker {
+      position: absolute; z-index: 5;
+      transform: translate(-50%,-50%);
+      display: flex; flex-direction: column; align-items: center;
+      animation: hover 3s ease-in-out infinite;
+    }
+    .drone-marker svg { width: 28px; height: 28px; filter: drop-shadow(0 0 8px rgba(34,197,94,0.6)); }
+    .drone-marker-label {
+      background: rgba(5,8,5,0.9); color: var(--accent); font-size: 0.6rem;
+      font-weight: 700; padding: 2px 8px; border-radius: 4px; margin-top: 4px;
+      border: 1px solid var(--border); white-space: nowrap;
+    }
+    @keyframes hover {
+      0%,100% { transform: translate(-50%,-50%) translateY(0); }
+      50% { transform: translate(-50%,-50%) translateY(-6px); }
     }
 
-    .infected-zone{
-      position:absolute;
-      left:18%;
-      top:22%;
-      width:90px;
-      height:70px;
-      background:rgba(255,152,0,.3);
-      border:3px solid var(--warning);
-      border-radius:16px;
-      padding:6px;
-      font-size:.7rem;
-      font-weight:bold;
-    } */
-        .infected-zone{
-      position:absolute;
+    /* Drone Fleet Cards */
+    .drone-card {
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: var(--radius-lg); overflow: hidden; margin-bottom: var(--space-md);
+    }
+    .drone-visual {
+      height: 160px; background: linear-gradient(180deg, #1a231a, #0f160f);
+      position: relative; display: flex; align-items: center; justify-content: center;
+    }
+    .drone-visual svg { width: 80px; height: 80px; opacity: 0.9; }
+    .drone-status-overlay {
+      position: absolute; top: var(--space-sm); right: var(--space-sm);
+    }
+    .drone-info { padding: var(--space-md); }
+    .drone-meta { display: grid; grid-template-columns: 1fr 1fr; gap: var(--space-md); margin-top: var(--space-sm); }
+    .meta-item { display: flex; flex-direction: column; gap: 4px; }
+    .meta-label { font-size: 0.7rem; color: var(--text-muted); font-weight: 600; text-transform: uppercase; }
+    .meta-value { font-size: 0.85rem; font-weight: 700; }
+    .drone-actions { display: flex; gap: var(--space-sm); padding: 0 var(--space-md) var(--space-md); }
 
-      left:10px; /* moved more left */
-      top:22%;
+    /* AI Analysis Page */
+    .xai-viewer {
+      position: relative; border-radius: var(--radius-lg); overflow: hidden;
+      border: 1px solid var(--border); background: #000;
+    }
+    .xai-image {
+      width: 100%; height: 240px; object-fit: cover; display: block;
+      filter: contrast(1.1) saturate(0.9);
+    }
+    .xai-heatmap {
+      position: absolute; inset: 0;
+      background: 
+        radial-gradient(ellipse 120px 80px at 65% 45%, rgba(239,68,68,0.45), transparent 70%),
+        radial-gradient(ellipse 80px 60px at 40% 55%, rgba(245,158,11,0.35), transparent 60%);
+      mix-blend-mode: screen;
+      pointer-events: none;
+    }
+    .xai-grid {
+      position: absolute; inset: 0;
+      background-image: 
+        linear-gradient(rgba(34,197,94,0.08) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(34,197,94,0.08) 1px, transparent 1px);
+      background-size: 40px 40px;
+      pointer-events: none;
+    }
+    .xai-scanline {
+      position: absolute; top: 0; left: 0; right: 0; height: 2px;
+      background: var(--accent); box-shadow: 0 0 12px var(--accent);
+      animation: scan 3s ease-in-out infinite;
+      opacity: 0.6;
+    }
+    @keyframes scan {
+      0%,100% { top: 0; opacity: 0; }
+      10% { opacity: 0.8; }
+      90% { opacity: 0.8; }
+      100% { top: 100%; opacity: 0; }
+    }
+    .model-toggle {
+      display: flex; background: var(--elevated); border: 1px solid var(--border);
+      border-radius: var(--radius-sm); overflow: hidden; margin-bottom: var(--space-md);
+    }
+    .model-toggle button {
+      flex: 1; background: transparent; border: none; color: var(--text-muted);
+      padding: 10px; font-size: 0.8rem; font-weight: 700; cursor: pointer;
+      transition: 0.2s; display: flex; align-items: center; justify-content: center; gap: 6px;
+    }
+    .model-toggle button.active { background: rgba(59,130,246,0.15); color: var(--info); }
 
-      width:90px;
-      height:70px;
+    /* Charts (CSS-based) */
+    .chart-container {
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: var(--radius-md); padding: var(--space-md); margin-bottom: var(--space-md);
+    }
+    .chart-title { font-size: 0.8rem; font-weight: 700; margin-bottom: var(--space-sm); }
+    .bar-chart { display: flex; align-items: flex-end; gap: 8px; height: 100px; padding-top: 20px; }
+    .bar-chart-col { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 6px; }
+    .bar-chart-bar {
+      width: 100%; border-radius: 4px 4px 0 0;
+      background: linear-gradient(180deg, var(--accent), rgba(34,197,94,0.3));
+      position: relative; transition: height 0.6s ease;
+    }
+    .bar-chart-bar.danger { background: linear-gradient(180deg, var(--danger), rgba(239,68,68,0.3)); }
+    .bar-chart-label { font-size: 0.6rem; color: var(--text-muted); font-weight: 600; }
 
-      background:rgba(255,152,0,.3);
-      border:3px solid var(--warning);
-      border-radius:16px;
-
-      padding:6px;
-      font-size:.7rem;
-      font-weight:bold;
+    /* Insights */
+    .treatment-card {
+      background: linear-gradient(135deg, rgba(34,197,94,0.08), transparent);
+      border: 1px solid rgba(34,197,94,0.2); border-radius: var(--radius-md);
+      padding: var(--space-md); margin-bottom: var(--space-sm);
+    }
+    .treatment-title { font-size: 0.85rem; font-weight: 700; color: #bbf7d0; margin-bottom: 6px; }
+    .treatment-detail { font-size: 0.8rem; color: var(--text-secondary); line-height: 1.5; }
+    .coord-tag {
+      display: inline-flex; align-items: center; gap: 4px;
+      background: var(--elevated); border: 1px solid var(--border);
+      padding: 4px 10px; border-radius: 6px; font-size: 0.75rem; font-weight: 600;
+      font-family: 'SF Mono', Monaco, monospace; color: var(--text-secondary);
+      margin: 4px 4px 0 0;
     }
 
-    .sick-zone{
-      position:absolute;
+    /* Notifications */
+    .notif-item {
+      display: flex; gap: var(--space-sm); padding: var(--space-md);
+      border-bottom: 1px solid var(--border); cursor: pointer; transition: 0.2s;
+    }
+    .notif-item:active { background: var(--elevated); }
+    .notif-item.unread { background: rgba(34,197,94,0.04); }
+    .notif-icon {
+      width: 40px; height: 40px; border-radius: var(--radius-sm);
+      display: grid; place-items: center; font-size: 1.1rem; flex-shrink: 0;
+    }
+    .notif-icon.critical { background: rgba(239,68,68,0.15); }
+    .notif-icon.warning { background: rgba(245,158,11,0.15); }
+    .notif-icon.info { background: rgba(59,130,246,0.15); }
+    .notif-icon.success { background: rgba(34,197,94,0.15); }
+    .notif-content h4 { font-size: 0.85rem; font-weight: 700; }
+    .notif-content p { font-size: 0.78rem; color: var(--text-secondary); margin-top: 2px; }
+    .notif-time { font-size: 0.65rem; color: var(--text-muted); margin-top: 4px; font-weight: 500; }
 
-      top:calc(45% + 45px); /* moved 30px down */
-      left:60%;
+    /* Mission Flow */
+    .mission-timeline {
+      display: flex; flex-direction: column; gap: var(--space-md);
+      position: relative; padding-left: 28px;
+    }
+    .mission-timeline::before {
+      content: ''; position: absolute; left: 10px; top: 8px; bottom: 8px;
+      width: 2px; background: var(--border);
+    }
+    .mission-step {
+      position: relative;
+    }
+    .mission-step::before {
+      content: ''; position: absolute; left: -22px; top: 4px;
+      width: 10px; height: 10px; border-radius: 50%; background: var(--border);
+      border: 2px solid var(--bg); z-index: 2;
+    }
+    .mission-step.active::before { background: var(--accent); box-shadow: 0 0 0 4px rgba(34,197,94,0.2); }
+    .mission-step.completed::before { background: var(--accent); }
+    .mission-step h4 { font-size: 0.85rem; }
+    .mission-step p { font-size: 0.78rem; color: var(--text-secondary); margin-top: 2px; }
 
-      width:70px;
-      height:70px;
-
-      border-radius:50%;
-      border:3px dashed var(--danger);
-
-      background:rgba(244,67,54,.25);
-
-      animation:pulse 2s infinite;
+    /* Bottom Nav */
+    .bottom-nav {
+      position: fixed; bottom: 0; left: 50%; transform: translateX(-50%);
+      width: 100%; max-width: 540px; height: var(--nav-height);
+      background: rgba(5,8,5,0.95); backdrop-filter: blur(16px);
+      border-top: 1px solid var(--border);
+      display: flex; justify-content: space-around; align-items: center;
+      z-index: 100; padding: 0 var(--space-sm);
+    }
+    .nav-item {
+      flex: 1; display: flex; flex-direction: column; align-items: center;
+      gap: 4px; padding: 8px 0; cursor: pointer; border: none; background: transparent;
+      color: var(--text-muted); transition: 0.2s; position: relative;
+    }
+    .nav-item.active { color: var(--accent); }
+    .nav-item svg { width: 24px; height: 24px; }
+    .nav-item span { font-size: 0.6rem; font-weight: 700; letter-spacing: 0.3px; }
+    .nav-badge {
+      position: absolute; top: 2px; left: 50%;
+      background: var(--danger); color: #fff; font-size: 0.55rem;
+      font-weight: 800; width: 16px; height: 16px; border-radius: 50%;
+      display: grid; place-items: center; margin-left: 8px;
     }
 
-    .drone-map{
-      position:absolute;
-      width:70px;
-      right:15%;
-      top:18%;
-      animation:droneFly 4s infinite ease-in-out;
-      filter:drop-shadow(0 0 12px cyan);
-    }
+    /* Utility */
+    .section-title { font-size: 1.15rem; font-weight: 800; margin-bottom: var(--space-sm); letter-spacing: -0.3px; }
+    .section-sub { font-size: 0.85rem; color: var(--text-secondary); margin-bottom: var(--space-md); }
+    .text-accent { color: var(--accent); }
+    .text-danger { color: var(--danger); }
+    .text-warning { color: var(--warning); }
+    .text-info { color: var(--info); }
+    .mt-md { margin-top: var(--space-md); }
+    .mb-md { margin-bottom: var(--space-md); }
+    .hidden { display: none !important; }
 
-    .drone-img{
-      width:100%;
-      height:170px;
-      object-fit:cover;
-      border-radius:14px;
-      margin-bottom:10px;
+    /* Modal */
+    .modal-overlay {
+      position: fixed; inset: 0; background: rgba(0,0,0,0.8);
+      backdrop-filter: blur(4px); z-index: 200;
+      display: none; align-items: flex-end; justify-content: center;
     }
-
-    .bar-container{
-      height:8px;
-      background:#000;
-      border-radius:10px;
-      overflow:hidden;
-      margin-top:6px;
+    .modal-overlay.active { display: flex; }
+    .modal-sheet {
+      background: var(--surface); border-top: 1px solid var(--border);
+      border-radius: var(--radius-lg) var(--radius-lg) 0 0;
+      width: 100%; max-width: 540px; max-height: 85vh;
+      overflow-y: auto; padding: var(--space-lg) var(--space-md);
+      animation: slideUp 0.3s ease;
     }
+    @keyframes slideUp { from { transform: translateY(100%); } to { transform: translateY(0); } }
+    .modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: var(--space-md); }
+    .modal-title { font-size: 1.1rem; font-weight: 800; }
+    .modal-close { width: 36px; height: 36px; border-radius: 50%; background: var(--elevated); border: 1px solid var(--border); color: var(--text); display: grid; place-items: center; cursor: pointer; }
 
-    .bar-fill{
-      height:100%;
-      background:var(--accent);
+    /* Responsive text for outdoor */
+    @media (max-width: 380px) {
+      html { font-size: 15px; }
+      .sensor-value { font-size: 1.4rem; }
     }
-
-    .nav-bar{
-      position:fixed;
-      bottom:0;
-      width:100%;
-      max-width:480px;
-      display:flex;
-      justify-content:space-around;
-      background:rgba(10,15,10,.96);
-      backdrop-filter:blur(10px);
-      padding:10px 0;
-      border-top:1px solid #222;
-      z-index:999;
-    }
-
-    .nav-item{
-      color:var(--text2);
-      display:flex;
-      flex-direction:column;
-      align-items:center;
-      font-size:.65rem;
-      gap:4px;
-      flex:1;
-      cursor:pointer;
-      transition:.2s;
-    }
-
-    .nav-item.active{
-      color:var(--accent);
-    }
-
-    .nav-item svg{
-      width:22px;
-      height:22px;
-      fill:currentColor;
-    }
-
-    .live-badge{
-      position:absolute;
-      top:10px;
-      left:10px;
-      background:red;
-      color:white;
-      padding:5px 10px;
-      border-radius:8px;
-      font-size:.7rem;
-      font-weight:bold;
-    }
-
-    @keyframes pulse{
-      0%{
-        transform:scale(1);
-        opacity:.4;
-      }
-      50%{
-        transform:scale(1.1);
-        opacity:.8;
-      }
-      100%{
-        transform:scale(1);
-        opacity:.4;
-      }
-    }
-
-    @keyframes droneFly{
-      0%{
-        transform:translateY(0px);
-      }
-      50%{
-        transform:translateY(-10px);
-      }
-      100%{
-        transform:translateY(0px);
-      }
-    }
-
   </style>
 </head>
-
 <body>
 
-<div class="app">
+<div class="app-shell">
 
-  <div class="workflow-title">
-    TARGETED SPOT-SPRAYING · PRECISION AGRICULTURE WORKFLOW
-  </div>
-
-  <!-- MAIN -->
-
-  <div id="main" class="page active">
-
-    <div class="farmer-profile">
-
-      <img
-      src="https://images.unsplash.com/photo-1500648767791-00dcc994a43e?q=80&w=500"
-      class="farmer-img">
-
+  <!-- Header -->
+  <header class="app-header">
+    <div class="brand">
+      <div class="brand-icon">AI</div>
       <div>
-        <strong>Welcome, Farmer John</strong>
-
-        <p style="font-size:.75rem;color:var(--text2)">
-          System Status: Online
-        </p>
+        <div class="brand-text" data-i18n="brand">baqshAI</div>
+        <div class="brand-sub" data-i18n="brandSub">AgroVision Sentinel</div>
       </div>
+    </div>
+    <div class="header-actions">
+      <div class="lang-switch">
+        <button class="active" onclick="setLang('en')">EN</button>
+        <button onclick="setLang('kz')">KZ</button>
+        <button onclick="setLang('ru')">RU</button>
+      </div>
+      <button class="icon-btn" onclick="navigate('notifications')">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/></svg>
+        <span class="badge" id="notifBadge">3</span>
+      </button>
+    </div>
+  </header>
 
+  <!-- DASHBOARD -->
+  <div id="dashboard" class="page active" style="padding: var(--space-md);">
+
+    <div class="alert-banner" onclick="navigate('map')">
+      <div class="alert-icon">⚠</div>
+      <div class="alert-content">
+        <h4 data-i18n="alertTitle">Early Warning: Field #4</h4>
+        <p data-i18n="alertDesc">AI detected pre-symptomatic anthracnose anomaly. 24h advance notice.</p>
+      </div>
     </div>
 
-    <div class="card"
-      style="border-left:5px solid var(--danger);cursor:pointer;"
-      onclick="navigateTo('map')">
-
-      <div style="display:flex;justify-content:space-between;align-items:center;">
-
-        <div>
-          <strong style="color:var(--danger)">
-            ALERT: FIELD #4 INFECTED
-          </strong>
-
-          <p style="font-size:.85rem;color:var(--text2)">
-            AI detected disease anomaly in corn field.
-          </p>
-        </div>
-
-        <span class="status-badge bg-danger">
-          ACTION
-        </span>
-
+    <div class="field-status-grid">
+      <div class="field-stat healthy">
+        <div class="field-stat-num">12</div>
+        <div class="field-stat-label" data-i18n="statHealthy">Healthy</div>
       </div>
-
+      <div class="field-stat risk">
+        <div class="field-stat-num">3</div>
+        <div class="field-stat-label" data-i18n="statRisk">At Risk</div>
+      </div>
+      <div class="field-stat critical">
+        <div class="field-stat-num">1</div>
+        <div class="field-stat-label" data-i18n="statCritical">Critical</div>
+      </div>
     </div>
 
-    <div class="card"
-      style="border-left:5px solid var(--warning);">
+    <h3 class="section-title" data-i18n="sensorsTitle">Live Sensors</h3>
+    <div class="sensor-grid">
+      <div class="sensor-card">
+        <div class="sensor-label" data-i18n="temp">Temperature</div>
+        <div class="sensor-value">24.2<span class="sensor-unit">°C</span></div>
+        <svg class="sensor-spark" viewBox="0 0 40 24"><polyline fill="none" stroke="var(--accent)" stroke-width="2" points="0,18 8,14 16,16 24,8 32,12 40,6"/></svg>
+      </div>
+      <div class="sensor-card">
+        <div class="sensor-label" data-i18n="humidity">Humidity</div>
+        <div class="sensor-value">68<span class="sensor-unit">%</span></div>
+        <svg class="sensor-spark" viewBox="0 0 40 24"><polyline fill="none" stroke="var(--warning)" stroke-width="2" points="0,20 8,16 16,18 24,10 32,14 40,8"/></svg>
+      </div>
+      <div class="sensor-card">
+        <div class="sensor-label" data-i18n="soil">Soil Moisture</div>
+        <div class="sensor-value">42<span class="sensor-unit">%</span></div>
+        <svg class="sensor-spark" viewBox="0 0 40 24"><polyline fill="none" stroke="var(--info)" stroke-width="2" points="0,16 8,14 16,15 24,12 32,13 40,10"/></svg>
+      </div>
+      <div class="sensor-card">
+        <div class="sensor-label" data-i18n="uv">UV Index</div>
+        <div class="sensor-value">6.2<span class="sensor-unit">High</span></div>
+        <svg class="sensor-spark" viewBox="0 0 40 24"><polyline fill="none" stroke="#f59e0b" stroke-width="2" points="0,14 8,12 16,10 24,6 32,8 40,4"/></svg>
+      </div>
+    </div>
 
-      <strong style="color:var(--warning)">
-        WEATHER WARNING
-      </strong>
-
-      <p style="margin-top:8px;color:var(--text2);font-size:.85rem;">
-        Rain expected tomorrow. Recommended spraying today.
-      </p>
-
+    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:var(--space-sm);">
+      <h3 class="section-title" style="margin:0;" data-i18n="weatherTitle">10-Day Forecast</h3>
+      <span style="font-size:0.75rem;color:var(--text-muted);font-weight:600;" data-i18n="weatherApi">OpenWeather API</span>
+    </div>
+    <div class="weather-container">
+      <div class="weather-scroll" id="weatherStrip">
+        <!-- Populated by JS -->
+      </div>
     </div>
 
     <div class="card">
-
-      <h4 style="margin-bottom:10px;">
-        Weather Forecast
-      </h4>
-
-      <div class="weather-strip">
-
-        <div class="weather-day">Mon<br>☀️<br>24°</div>
-        <div class="weather-day">Tue<br>☀️<br>26°</div>
-        <div class="weather-day">Wed<br>⛅<br>22°</div>
-        <div class="weather-day">Thu<br>🌧️<br>18°</div>
-        <div class="weather-day">Fri<br>☀️<br>25°</div>
-
+      <div class="card-header">
+        <div>
+          <div class="card-title" data-i18n="farmHealth">Farm Health Index</div>
+          <div class="card-sub" data-i18n="farmHealthSub">Aggregated from multispectral + IoT fusion</div>
+        </div>
+        <span style="font-size:1.5rem;font-weight:800;color:var(--accent);">82%</span>
       </div>
-
+      <div class="progress-track"><div class="progress-fill" style="width:82%;background:var(--accent);"></div></div>
+      <div style="display:flex;justify-content:space-between;margin-top:8px;font-size:0.7rem;color:var(--text-muted);font-weight:600;">
+        <span data-i18n="healthPoor">Poor</span>
+        <span data-i18n="healthExcellent">Excellent</span>
+      </div>
     </div>
 
+    <div class="btn-row">
+      <button class="btn btn-secondary" onclick="navigate('map')" data-i18n="btnViewMap">View Map</button>
+      <button class="btn btn-primary" onclick="navigate('drones')" data-i18n="btnFleet">Fleet</button>
+    </div>
   </div>
 
   <!-- MAP -->
+  <div id="map" class="page" style="padding: var(--space-md);">
+    <h2 class="section-title" data-i18n="mapTitle">Field Surveillance</h2>
+    <p class="section-sub" data-i18n="mapSub">Real-time AI monitoring with georeferenced anomaly detection</p>
 
-  <div id="map" class="page">
-
-    <h3>Satellite Field Mapping</h3>
-
-    <p style="color:var(--text2);font-size:.82rem;margin:8px 0 12px;">
-      AI monitoring active for corn plantation.
-    </p>
-
-    <div class="map-view">
-
-      <div class="infected-zone">
-        Infected Zone
+    <div class="map-container" id="mapContainer">
+      <div class="map-layer-ctrl">
+        <button class="active" onclick="setMapLayer('visual')" data-i18n="layerVisual">Visual</button>
+        <button onclick="setMapLayer('multi')" data-i18n="layerMulti">Multi</button>
+        <button onclick="setMapLayer('thermal')" data-i18n="layerThermal">Thermal</button>
+        <button onclick="setMapLayer('disease')" data-i18n="layerDisease">Disease</button>
       </div>
 
-      <div class="sick-zone"
-        onclick="navigateTo('analyze')">
+      <div class="field-poly f1" onclick="selectField(1)">Field #1<br><span style="font-size:0.6rem;opacity:0.8;">Wheat — Healthy</span></div>
+      <div class="field-poly f2" onclick="selectField(2)">Field #2<br><span style="font-size:0.6rem;opacity:0.8;">Corn — At Risk</span></div>
+      <div class="field-poly f3" onclick="selectField(3)">Field #3<br><span style="font-size:0.6rem;opacity:0.8;">Soy — Healthy</span></div>
+      <div class="field-poly f4" onclick="selectField(4)">Field #4<br><span style="font-size:0.6rem;opacity:0.8;">Corn — Critical</span></div>
+
+      <div class="hotspot" style="left:68%;top:58%;width:50px;height:50px;" onclick="navigate('analysis')">
+        <div class="hotspot-core"></div>
+        <div class="hotspot-label" data-i18n="hotspotLabel">Anthracnose</div>
       </div>
 
-      <!-- <img
-      src="https://cdn-icons-png.flaticon.com/512/744/744465.png"
-      class="drone-map"> -->
-
-      <div class="live-badge">
-        ● LIVE
+      <div class="drone-marker" style="left:35%;top:35%;">
+        <svg viewBox="0 0 24 24" fill="var(--accent)"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg>
+        <div class="drone-marker-label">Sentinel-01</div>
+      </div>
+      <div class="drone-marker" style="left:72%;top:22%;">
+        <svg viewBox="0 0 24 24" fill="var(--warning)"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg>
+        <div class="drone-marker-label">Sentinel-02</div>
       </div>
 
+      <div class="map-legend">
+        <div class="legend-item"><div class="legend-dot" style="background:var(--accent);"></div> <span data-i18n="legendHealthy">Healthy</span></div>
+        <div class="legend-item"><div class="legend-dot" style="background:var(--warning);"></div> <span data-i18n="legendRisk">At Risk</span></div>
+        <div class="legend-item"><div class="legend-dot" style="background:var(--danger);"></div> <span data-i18n="legendCritical">Critical</span></div>
+      </div>
     </div>
 
-    <button class="btn"
-      style="margin-top:16px"
-      onclick="navigateTo('analyze')">
-
-      Analyze Sick Zone
-
-    </button>
-
+    <div class="btn-row mt-md">
+      <button class="btn btn-primary" onclick="navigate('analysis')" data-i18n="btnAnalyze">Analyze Hotspot</button>
+      <button class="btn btn-secondary" onclick="launchScan()" data-i18n="btnScan">Launch Scan</button>
+    </div>
   </div>
 
   <!-- DRONES -->
+  <div id="drones" class="page" style="padding: var(--space-md);">
+    <h2 class="section-title" data-i18n="fleetTitle">Drone Fleet</h2>
+    <p class="section-sub" data-i18n="fleetSub">Autonomous monitoring & precision spraying units</p>
 
-  <div id="drones" class="page">
-
-    <h3>Drone Fleet</h3>
-
-    <div class="card">
-
-      <img
-      src="https://images.unsplash.com/photo-1473968512647-3e447244af8f?q=80&w=1000"
-      class="drone-img">
-
-      <div style="display:flex;justify-content:space-between;">
-
-        <strong>Baqsh-N2 Sprayer Drone</strong>
-
-        <span class="status-badge"
-          style="background:var(--accent);">
-
-          READY
-
-        </span>
-
+    <!-- Sentinel-01 -->
+    <div class="drone-card">
+      <div class="drone-visual">
+        <svg viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="1.5"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg>
+        <div class="drone-status-overlay"><span class="status-pill pill-success" data-i18n="statusFlying">Flying</span></div>
       </div>
-
-      <div style="margin-top:12px;font-size:.85rem;">
-        Battery: 94%
-      </div>
-
-      <div class="bar-container">
-        <div class="bar-fill"
-          style="width:94%">
+      <div class="drone-info">
+        <div class="card-header" style="padding:0;margin-bottom:8px;">
+          <div class="card-title">Sentinel-01</div>
+          <span style="font-size:0.75rem;color:var(--text-muted);font-weight:600;">NVIDIA Jetson Nano</span>
         </div>
-      </div>
-
-      <div style="margin-top:16px;font-size:.82rem;color:var(--text2);">
-        AI-powered spraying drone equipped with disease
-        recognition system and autonomous navigation.
-      </div>
-
-    </div>
-
-  </div>
-
-  <!-- ANALYZE -->
-
-  <div id="analyze" class="page">
-
-    <div class="card">
-
-      <h3>AI Diagnosis — Field #4</h3>
-
-      <div style="
-        height:190px;
-        margin:16px 0;
-        border-radius:16px;
-        background:
-        radial-gradient(circle at 60% 50%, rgba(255,0,0,.4), transparent),
-        url('https://images.unsplash.com/photo-1523348837708-15d4a09cfac2?q=80&w=1000');
-        background-size:cover;
-        background-position:center;
-      "></div>
-
-      <p>
-        <strong>Result:</strong>
-        91% Probability of Anthracnose Disease
-      </p>
-
-      <p style="
-        margin-top:10px;
-        color:var(--text2);
-        font-size:.85rem;
-      ">
-        Immediate targeted spraying recommended
-        to prevent disease spreading.
-      </p>
-
-    </div>
-
-    <button class="btn"
-      onclick="navigateTo('camera')">
-
-      Open Drone Camera
-
-    </button>
-
-    <button class="btn"
-      style="margin-top:12px;"
-      onclick="navigateTo('spray')">
-
-      Prepare Spraying
-
-    </button>
-
-  </div>
-
-  <!-- CAMERA -->
-
-  <div id="camera" class="page">
-
-    <h3>Live Drone Camera</h3>
-
-    <div class="card">
-
-      <div style="
-        height:260px;
-        border-radius:18px;
-        overflow:hidden;
-        position:relative;
-        background:
-        url('https://images.unsplash.com/photo-1500937386664-56d1dfef3854?q=80&w=1400');
-        background-size:cover;
-        background-position:center;
-      ">
-
-        <div style="
-          position:absolute;
-          inset:0;
-          background:
-          radial-gradient(circle at 60% 50%,
-          rgba(255,0,0,.35), transparent);
-        "></div>
-
-        <div class="live-badge">
-          ● LIVE AI SCAN
-        </div>
-
-      </div>
-
-      <button class="btn"
-        style="margin-top:14px;">
-
-        Capture Screenshot
-
-      </button>
-
-    </div>
-
-  </div>
-
-  <!-- STATS -->
-
-  <div id="stats" class="page">
-
-    <h3>Farm Analytics</h3>
-
-    <div class="card">
-
-      <div style="display:flex;justify-content:space-between;">
-        <strong>Farm Health</strong>
-        <strong style="color:var(--accent)">82%</strong>
-      </div>
-
-      <div class="bar-container"
-        style="margin-top:10px;">
-
-        <div class="bar-fill"
-          style="width:82%">
-        </div>
-
-      </div>
-
-      <div style="
-        display:grid;
-        grid-template-columns:1fr 1fr;
-        gap:12px;
-        margin-top:18px;
-      ">
-
-        <div class="card">
-          <h2>14</h2>
-          <p style="color:var(--text2);font-size:.8rem;">
-            Healthy Fields
-          </p>
-        </div>
-
-        <div class="card">
-          <h2 style="color:var(--danger)">2</h2>
-          <p style="color:var(--text2);font-size:.8rem;">
-            Critical Fields
-          </p>
-        </div>
-
-        <div class="card">
-          <h2>4</h2>
-          <p style="color:var(--text2);font-size:.8rem;">
-            Active Drones
-          </p>
-        </div>
-
-        <div class="card">
-          <h2>42%</h2>
-          <p style="color:var(--text2);font-size:.8rem;">
-            Chemical Saved
-          </p>
-        </div>
-
-      </div>
-
-    </div>
-
-  </div>
-
-  <!-- SPRAY -->
-
-  <div id="spray" class="page">
-
-    <div class="card"
-      style="text-align:center;">
-
-      <h3>Targeted Spot-Spraying</h3>
-
-      <div id="flow-visual"
-        style="font-size:4rem;margin:20px 0;">
-
-        🚁
-
-      </div>
-
-      <div id="flow-status"
-        style="font-weight:bold;margin-bottom:12px;">
-
-        Ready for Mission
-
-      </div>
-
-      <div id="flow-progress"
-        style="width:85%;margin:auto;display:none;">
-
-        <div class="bar-container">
-          <div id="flow-bar"
-            class="bar-fill"
-            style="width:0%">
+        <div class="drone-meta">
+          <div class="meta-item">
+            <span class="meta-label" data-i18n="metaBattery">Battery</span>
+            <span class="meta-value">78%</span>
+            <div class="progress-track"><div class="progress-fill" style="width:78%;background:var(--accent);"></div></div>
+          </div>
+          <div class="meta-item">
+            <span class="meta-label" data-i18n="metaTank">Spray Tank</span>
+            <span class="meta-value">62%</span>
+            <div class="progress-track"><div class="progress-fill" style="width:62%;background:var(--info);"></div></div>
+          </div>
+          <div class="meta-item">
+            <span class="meta-label" data-i18n="metaMission">Mission</span>
+            <span class="meta-value" style="font-size:0.75rem;">Scanning Field #3</span>
+          </div>
+          <div class="meta-item">
+            <span class="meta-label">GPS</span>
+            <span class="meta-value" style="font-size:0.7rem;font-family:monospace;">43.23, 76.89</span>
           </div>
         </div>
-
       </div>
-
-      <button class="btn"
-        id="start-btn"
-        style="margin-top:20px;"
-        onclick="runWorkflow()">
-
-        Start Spraying
-
-      </button>
-
+      <div class="drone-actions">
+        <button class="btn btn-secondary" style="padding:10px;font-size:0.85rem;" onclick="droneAction('return',1)" data-i18n="btnReturn">Return</button>
+        <button class="btn btn-danger" style="padding:10px;font-size:0.85rem;" onclick="droneAction('stop',1)" data-i18n="btnStop">Emergency</button>
+      </div>
     </div>
 
+    <!-- Sentinel-02 -->
+    <div class="drone-card">
+      <div class="drone-visual">
+        <svg viewBox="0 0 24 24" fill="none" stroke="var(--warning)" stroke-width="1.5"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg>
+        <div class="drone-status-overlay"><span class="status-pill pill-warning" data-i18n="statusCharging">Charging</span></div>
+      </div>
+      <div class="drone-info">
+        <div class="card-header" style="padding:0;margin-bottom:8px;">
+          <div class="card-title">Sentinel-02</div>
+          <span style="font-size:0.75rem;color:var(--text-muted);font-weight:600;">NVIDIA Jetson Nano</span>
+        </div>
+        <div class="drone-meta">
+          <div class="meta-item">
+            <span class="meta-label" data-i18n="metaBattery">Battery</span>
+            <span class="meta-value text-danger">22%</span>
+            <div class="progress-track"><div class="progress-fill" style="width:22%;background:var(--danger);"></div></div>
+          </div>
+          <div class="meta-item">
+            <span class="meta-label" data-i18n="metaTank">Spray Tank</span>
+            <span class="meta-value">85%</span>
+            <div class="progress-track"><div class="progress-fill" style="width:85%;background:var(--info);"></div></div>
+          </div>
+          <div class="meta-item">
+            <span class="meta-label" data-i18n="metaMission">Mission</span>
+            <span class="meta-value" style="font-size:0.75rem;">At Base</span>
+          </div>
+          <div class="meta-item">
+            <span class="meta-label">GPS</span>
+            <span class="meta-value" style="font-size:0.7rem;font-family:monospace;">43.21, 76.87</span>
+          </div>
+        </div>
+      </div>
+      <div class="drone-actions">
+        <button class="btn btn-primary" style="padding:10px;font-size:0.85rem;" onclick="droneAction('launch',2)" data-i18n="btnLaunch">Launch</button>
+        <button class="btn btn-secondary" style="padding:10px;font-size:0.85rem;" onclick="droneAction('refill',2)" data-i18n="btnRefill">Refill Tank</button>
+      </div>
+    </div>
+
+    <!-- Sentinel-03 -->
+    <div class="drone-card">
+      <div class="drone-visual">
+        <svg viewBox="0 0 24 24" fill="none" stroke="var(--text-secondary)" stroke-width="1.5"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg>
+        <div class="drone-status-overlay"><span class="status-pill pill-info" data-i18n="statusIdle">Idle</span></div>
+      </div>
+      <div class="drone-info">
+        <div class="card-header" style="padding:0;margin-bottom:8px;">
+          <div class="card-title">Sentinel-03</div>
+          <span style="font-size:0.75rem;color:var(--text-muted);font-weight:600;">NVIDIA Jetson Nano</span>
+        </div>
+        <div class="drone-meta">
+          <div class="meta-item">
+            <span class="meta-label" data-i18n="metaBattery">Battery</span>
+            <span class="meta-value text-accent">95%</span>
+            <div class="progress-track"><div class="progress-fill" style="width:95%;background:var(--accent);"></div></div>
+          </div>
+          <div class="meta-item">
+            <span class="meta-label" data-i18n="metaTank">Spray Tank</span>
+            <span class="meta-value">100%</span>
+            <div class="progress-track"><div class="progress-fill" style="width:100%;background:var(--info);"></div></div>
+          </div>
+          <div class="meta-item">
+            <span class="meta-label" data-i18n="metaMission">Mission</span>
+            <span class="meta-value" style="font-size:0.75rem;" data-i18n="missionReady">Ready</span>
+          </div>
+          <div class="meta-item">
+            <span class="meta-label">GPS</span>
+            <span class="meta-value" style="font-size:0.7rem;font-family:monospace;">43.22, 76.88</span>
+          </div>
+        </div>
+      </div>
+      <div class="drone-actions">
+        <button class="btn btn-primary" style="padding:10px;font-size:0.85rem;" onclick="droneAction('launch',3)" data-i18n="btnLaunch">Launch</button>
+        <button class="btn btn-secondary" style="padding:10px;font-size:0.85rem;" onclick="droneAction('mission',3)" data-i18n="btnAssign">Assign Mission</button>
+      </div>
+    </div>
   </div>
 
-  <!-- NAV -->
+  <!-- AI ANALYSIS -->
+  <div id="analysis" class="page" style="padding: var(--space-md);">
+    <h2 class="section-title" data-i18n="analysisTitle">AI Analysis Centre</h2>
+    <p class="section-sub" data-i18n="analysisSub">Explainable AI (XAI) with Grad-CAM visualization</p>
 
-  <div class="nav-bar">
-
-    <div class="nav-item active"
-      onclick="navigateTo('main',this)">
-
-      <svg viewBox="0 0 24 24">
-        <path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/>
-      </svg>
-
-      <span>Main</span>
-
+    <div class="model-toggle">
+      <button class="active" onclick="setModel('day')">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="5"/><path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/></svg>
+        <span data-i18n="modelDay">Day Model</span>
+      </button>
+      <button onclick="setModel('night')">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+        <span data-i18n="modelNight">Night Thermal</span>
+      </button>
     </div>
 
-    <div class="nav-item"
-      onclick="navigateTo('map',this)">
-
-      <svg viewBox="0 0 24 24">
-        <path d="M20.5 3l-.16.03L15 5.1 9 3 3.36 4.9c-.21.07-.36.25-.36.48V20.5c0 .28.22.5.5.5l.16-.03L9 18.9l6 2.1 5.64-1.9c.21-.07.36-.25.36-.48V3.5c0-.28-.22-.5-.5-.5z"/>
-      </svg>
-
-      <span>Map</span>
-
+    <div class="xai-viewer">
+      <img class="xai-image" src="https://images.unsplash.com/photo-1523348837708-15d4a09cfac2?q=80&w=1000" alt="Field scan">
+      <div class="xai-heatmap"></div>
+      <div class="xai-grid"></div>
+      <div class="xai-scanline"></div>
+      <div style="position:absolute;top:var(--space-sm);left:var(--space-sm);background:rgba(5,8,5,0.85);backdrop-filter:blur(8px);padding:6px 12px;border-radius:var(--radius-sm);border:1px solid var(--border);font-size:0.7rem;font-weight:700;color:var(--danger);display:flex;align-items:center;gap:6px;">
+        <span style="width:8px;height:8px;background:var(--danger);border-radius:50%;animation:pulse 1.5s infinite;"></span>
+        <span data-i18n="liveInference">LIVE INFERENCE</span>
+      </div>
     </div>
 
-    <div class="nav-item"
-      onclick="navigateTo('drones',this)">
-
-      <svg viewBox="0 0 24 24">
-        <path d="M21 16.5c0 .38-.21.71-.53.88l-7.97 4.47c-.31.17-.69.17-1 0l-7.97-4.47c-.32-.17-.53-.5-.53-.88V7.5c0-.38.21-.71.53-.88l7.97-4.47c.31-.17.69-.17 1 0l7.97 4.47c.32.17.53.5.53.88v9z"/>
-      </svg>
-
-      <span>Drones</span>
-
+    <div class="card mt-md">
+      <div class="card-header">
+        <div>
+          <div class="card-title" data-i18n="diagnosisTitle">Diagnosis Result</div>
+          <div class="card-sub">Field #4 · Corn · Sector B7</div>
+        </div>
+        <span class="status-pill pill-danger" data-i18n="severityCritical">Critical</span>
+      </div>
+      <div style="display:flex;align-items:baseline;gap:8px;margin:8px 0;">
+        <span style="font-size:2.2rem;font-weight:800;color:var(--danger);">91%</span>
+        <span style="font-size:1rem;font-weight:700;color:#fecaca;">Anthracnose</span>
+      </div>
+      <p style="font-size:0.85rem;color:var(--text-secondary);line-height:1.5;" data-i18n="diagnosisDesc">
+        Hybrid CNN-Transformer detected subtle textural changes and thermal differential patterns consistent with early-stage Colletotrichum infection. Pre-symptomatic phase confirmed.
+      </p>
+      <div style="margin-top:12px;padding-top:12px;border-top:1px solid var(--border);display:flex;gap:16px;font-size:0.75rem;color:var(--text-muted);font-weight:600;">
+        <span>CNN-Transformer</span>
+        <span>·</span>
+        <span>TensorRT Optimized</span>
+        <span>·</span>
+        <span>42ms inference</span>
+      </div>
     </div>
 
-    <div class="nav-item"
-      onclick="navigateTo('stats',this)">
-
-      <svg viewBox="0 0 24 24">
-        <path d="M3 13h2v-2H3v2zm4 6h2V5H7v14zm4-4h2V9h-2v6zm4 4h2V3h-2v16zm4-8v2h2v-2h-2z"/>
-      </svg>
-
-      <span>Stats</span>
-
+    <div class="chart-container">
+      <div class="chart-title" data-i18n="correlationTitle">Sensor Correlation (Last 72h)</div>
+      <div class="bar-chart">
+        <div class="bar-chart-col"><div class="bar-chart-bar" style="height:40%"></div><span class="bar-chart-label">-72h</span></div>
+        <div class="bar-chart-col"><div class="bar-chart-bar" style="height:55%"></div><span class="bar-chart-label">-60h</span></div>
+        <div class="bar-chart-col"><div class="bar-chart-bar" style="height:50%"></div><span class="bar-chart-label">-48h</span></div>
+        <div class="bar-chart-col"><div class="bar-chart-bar" style="height:70%"></div><span class="bar-chart-label">-36h</span></div>
+        <div class="bar-chart-col"><div class="bar-chart-bar" style="height:85%"></div><span class="bar-chart-label">-24h</span></div>
+        <div class="bar-chart-col"><div class="bar-chart-bar danger" style="height:100%"></div><span class="bar-chart-label">Now</span></div>
+      </div>
+      <div style="display:flex;justify-content:space-between;margin-top:8px;font-size:0.65rem;color:var(--text-muted);font-weight:600;">
+        <span data-i18n="chartHumidity">Humidity Spike</span>
+        <span data-i18n="chartDisease">Disease Probability</span>
+      </div>
     </div>
 
-    <div class="nav-item"
-      onclick="navigateTo('spray',this)">
-
-      <svg viewBox="0 0 24 24">
-        <path d="M12 2L4.5 20.29l.71.71L12 18l6.79 3 .71-.71z"/>
-      </svg>
-
-      <span>Spray</span>
-
+    <div class="card">
+      <div class="card-title" style="margin-bottom:10px;" data-i18n="xaiTitle">Explainability (Grad-CAM)</div>
+      <p style="font-size:0.8rem;color:var(--text-secondary);line-height:1.5;margin-bottom:12px;" data-i18n="xaiDesc">
+        Red zones indicate regions where the model focused to detect early lesion patterns. Yellow zones show secondary contextual features (humidity stress boundaries).
+      </p>
+      <div style="display:flex;gap:8px;flex-wrap:wrap;">
+        <div style="display:flex;align-items:center;gap:6px;font-size:0.75rem;font-weight:600;"><span style="width:12px;height:12px;border-radius:3px;background:rgba(239,68,68,0.6);"></span> Primary Anomaly</div>
+        <div style="display:flex;align-items:center;gap:6px;font-size:0.75rem;font-weight:600;"><span style="width:12px;height:12px;border-radius:3px;background:rgba(245,158,11,0.5);"></span> Contextual Stress</div>
+        <div style="display:flex;align-items:center;gap:6px;font-size:0.75rem;font-weight:600;"><span style="width:12px;height:12px;border-radius:3px;background:rgba(34,197,94,0.2);"></span> Healthy Tissue</div>
+      </div>
     </div>
 
+    <button class="btn btn-primary mt-md" onclick="navigate('insights')" data-i18n="btnInsights">View Treatment Plan</button>
+  </div>
+
+  <!-- INSIGHTS -->
+  <div id="insights" class="page" style="padding: var(--space-md);">
+    <h2 class="section-title" data-i18n="insightsTitle">Decision Support</h2>
+    <p class="section-sub" data-i18n="insightsSub">AI-generated treatment protocol with Variable Rate Application</p>
+
+    <div class="treatment-card">
+      <div class="treatment-title" data-i18n="treatRec">Recommended Treatment</div>
+      <div class="treatment-detail">
+        <strong>Mancozeb 80% WP</strong> — Broad-spectrum fungicide effective against Colletotrichum spp.
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-title" data-i18n="protocolTitle">Application Protocol</div>
+      <div style="margin-top:12px;display:flex;flex-direction:column;gap:14px;">
+        <div style="display:flex;justify-content:space-between;align-items:center;padding-bottom:12px;border-bottom:1px solid var(--border);">
+          <div>
+            <div style="font-size:0.8rem;font-weight:700;" data-i18n="dosageLabel">Dosage per Hectare</div>
+            <div style="font-size:0.75rem;color:var(--text-muted);margin-top:2px;" data-i18n="dosageSub">Variable rate based on infection severity</div>
+          </div>
+          <span style="font-size:1.1rem;font-weight:800;color:var(--accent);">2.5 kg/ha</span>
+        </div>
+        <div style="display:flex;justify-content:space-between;align-items:center;padding-bottom:12px;border-bottom:1px solid var(--border);">
+          <div>
+            <div style="font-size:0.8rem;font-weight:700;" data-i18n="waterLabel">Water Volume</div>
+            <div style="font-size:0.75rem;color:var(--text-muted);margin-top:2px;" data-i18n="waterSub">Spot-spray concentration</div>
+          </div>
+          <span style="font-size:1.1rem;font-weight:800;">400 L/ha</span>
+        </div>
+        <div style="display:flex;justify-content:space-between;align-items:center;">
+          <div>
+            <div style="font-size:0.8rem;font-weight:700;" data-i18n="timingLabel">Optimal Timing</div>
+            <div style="font-size:0.75rem;color:var(--text-muted);margin-top:2px;" data-i18n="timingSub">Before rain event (Thu)</div>
+          </div>
+          <span style="font-size:1.1rem;font-weight:800;color:var(--warning);">Today 16:00</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-title" data-i18n="targetTitle">Target Coordinates</div>
+      <p style="font-size:0.8rem;color:var(--text-secondary);margin:8px 0 12px;" data-i18n="targetSub">GPS waypoints for VRA spot-spraying mission</p>
+      <div>
+        <span class="coord-tag">43.2381, 76.8942</span>
+        <span class="coord-tag">43.2385, 76.8948</span>
+        <span class="coord-tag">43.2390, 76.8951</span>
+        <span class="coord-tag">43.2394, 76.8955</span>
+        <span class="coord-tag">43.2398, 76.8960</span>
+      </div>
+    </div>
+
+    <div class="card" style="background: linear-gradient(135deg, rgba(34,197,94,0.06), transparent); border-color: rgba(34,197,94,0.15);">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
+        <span class="card-title" data-i18n="savingsTitle">Projected Savings</span>
+        <span style="font-size:1.4rem;font-weight:800;color:var(--accent);">-42%</span>
+      </div>
+      <p style="font-size:0.8rem;color:var(--text-secondary);line-height:1.5;" data-i18n="savingsDesc">
+        Targeted spot-spraying reduces chemical usage by 42% compared to blanket application. Estimated cost savings: $340/ha.
+      </p>
+    </div>
+
+    <div class="btn-row mt-md">
+      <button class="btn btn-primary" onclick="sendToSprayer()" data-i18n="btnSendSprayer">Send to Sprayer Drone</button>
+    </div>
+    <button class="btn btn-secondary mt-md" style="margin-top:var(--space-sm);" onclick="downloadReport()" data-i18n="btnDownload">Download PDF Report</button>
+  </div>
+
+  <!-- NOTIFICATIONS -->
+  <div id="notifications" class="page" style="padding: var(--space-md);">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:var(--space-md);">
+      <h2 class="section-title" style="margin:0;" data-i18n="notifTitle">Notifications</h2>
+      <button style="background:transparent;border:none;color:var(--text-muted);font-size:0.8rem;font-weight:600;cursor:pointer;" onclick="markAllRead()" data-i18n="markRead">Mark all read</button>
+    </div>
+
+    <div id="notifList">
+      <div class="notif-item unread" onclick="openNotif(0)">
+        <div class="notif-icon critical">⚠</div>
+        <div class="notif-content">
+          <h4 data-i18n="notif1Title">Early Disease Warning</h4>
+          <p data-i18n="notif1Desc">Anthracnose pre-symptomatic detection in Field #4 Sector B7.</p>
+          <div class="notif-time">14:32 · Sentinel-01</div>
+        </div>
+      </div>
+      <div class="notif-item unread" onclick="openNotif(1)">
+        <div class="notif-icon warning">🔋</div>
+        <div class="notif-content">
+          <h4 data-i18n="notif2Title">Drone Battery Low</h4>
+          <p data-i18n="notif2Desc">Sentinel-02 at 22%. Automatic return to base initiated.</p>
+          <div class="notif-time">14:15 · System</div>
+        </div>
+      </div>
+      <div class="notif-item unread" onclick="openNotif(2)">
+        <div class="notif-icon info">💧</div>
+        <div class="notif-content">
+          <h4 data-i18n="notif3Title">Spray Tank Refill</h4>
+          <p data-i18n="notif3Desc">Sentinel-02 tank at 85%. Refill recommended before next mission.</p>
+          <div class="notif-time">13:58 · Fleet Manager</div>
+        </div>
+      </div>
+      <div class="notif-item" onclick="openNotif(3)">
+        <div class="notif-icon success">✓</div>
+        <div class="notif-content">
+          <h4 data-i18n="notif4Title">Scan Mission Complete</h4>
+          <p data-i18n="notif4Desc">Sentinel-01 finished Field #3 multispectral scan. 0 anomalies.</p>
+          <div class="notif-time">12:40 · Sentinel-01</div>
+        </div>
+      </div>
+      <div class="notif-item" onclick="openNotif(4)">
+        <div class="notif-icon info">🌧</div>
+        <div class="notif-content">
+          <h4 data-i18n="notif5Title">Weather Advisory</h4>
+          <p data-i18n="notif5Desc">Rain forecast Thursday 18:00. Complete spraying by Wednesday evening.</p>
+          <div class="notif-time">08:00 · Weather API</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- MISSION / SPRAY WORKFLOW -->
+  <div id="spray" class="page" style="padding: var(--space-md);">
+    <h2 class="section-title" data-i18n="missionTitle">Mission Control</h2>
+    <p class="section-sub" data-i18n="missionSub">Targeted spot-spraying workflow execution</p>
+
+    <div class="card" style="text-align:center;padding:var(--space-lg);">
+      <div id="missionVisual" style="font-size:5rem;margin-bottom:var(--space-md);transition:0.3s;">🚁</div>
+      <h3 id="missionStatus" style="font-size:1.1rem;margin-bottom:8px;" data-i18n="missionReady">Ready for Mission</h3>
+      <p id="missionDetail" style="font-size:0.85rem;color:var(--text-secondary);margin-bottom:var(--space-md);" data-i18n="missionDetail">Sentinel-03 assigned to Field #4 VRA spraying</p>
+
+      <div id="missionProgress" style="display:none;margin-bottom:var(--space-md);">
+        <div class="progress-track" style="height:10px;"><div id="missionBar" class="progress-fill" style="width:0%;background:var(--accent);"></div></div>
+        <div style="display:flex;justify-content:space-between;margin-top:6px;font-size:0.7rem;color:var(--text-muted);font-weight:600;">
+          <span id="missionStepText">Initializing...</span>
+          <span id="missionPercent">0%</span>
+        </div>
+      </div>
+
+      <div class="mission-timeline" id="missionTimeline" style="text-align:left;margin-bottom:var(--space-md);">
+        <div class="mission-step" id="step1"><h4 data-i18n="step1">AI Path Planning</h4><p data-i18n="step1Desc">Optimizing waypoints for 42% chemical reduction</p></div>
+        <div class="mission-step" id="step2"><h4 data-i18n="step2">Drone Preflight</h4><p data-i18n="step2Desc">Tank load 2.5kg Mancozeb, battery 95%</p></div>
+        <div class="mission-step" id="step3"><h4 data-i18n="step3">Targeted Spraying</h4><p data-i18n="step3Desc">Variable rate application at 5 GPS waypoints</p></div>
+        <div class="mission-step" id="step4"><h4 data-i18n="step4">Verification Scan</h4><p data-i18n="step4Desc">Post-treatment multispectral validation</p></div>
+      </div>
+
+      <button class="btn btn-primary" id="startMissionBtn" onclick="runMission()" data-i18n="btnStart">Start Spraying Mission</button>
+      <button class="btn btn-secondary hidden" id="returnBtn" onclick="navigate('dashboard')" data-i18n="btnDashboard">Return to Dashboard</button>
+    </div>
   </div>
 
 </div>
 
-<audio id="successSound">
-  <source src="https://assets.mixkit.co/active_storage/sfx/2013/2013-preview.mp3" type="audio/mpeg">
-</audio>
+<!-- Bottom Navigation -->
+<nav class="bottom-nav">
+  <button class="nav-item active" onclick="navigate('dashboard')">
+    <svg viewBox="0 0 24 24" fill="currentColor"><path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/></svg>
+    <span data-i18n="navHome">Home</span>
+  </button>
+  <button class="nav-item" onclick="navigate('map')">
+    <svg viewBox="0 0 24 24" fill="currentColor"><path d="M20.5 3l-.16.03L15 5.1 9 3 3.36 4.9c-.21.07-.36.25-.36.48V20.5c0 .28.22.5.5.5l.16-.03L9 18.9l6 2.1 5.64-1.9c.21-.07.36-.25.36-.48V3.5c0-.28-.22-.5-.5-.5z"/></svg>
+    <span data-i18n="navMap">Map</span>
+  </button>
+  <button class="nav-item" onclick="navigate('drones')">
+    <svg viewBox="0 0 24 24" fill="currentColor"><path d="M21 16.5c0 .38-.21.71-.53.88l-7.97 4.47c-.31.17-.69.17-1 0l-7.97-4.47c-.32-.17-.53-.5-.53-.88V7.5c0-.38.21-.71.53-.88l7.97-4.47c.31-.17.69-.17 1 0l7.97 4.47c.32.17.53.5.53.88v9z"/></svg>
+    <span data-i18n="navDrones">Drones</span>
+  </button>
+  <button class="nav-item" onclick="navigate('analysis')">
+    <svg viewBox="0 0 24 24" fill="currentColor"><path d="M3 13h2v-2H3v2zm4 6h2V5H7v14zm4-4h2V9h-2v6zm4 4h2V3h-2v16zm4-8v2h2v-2h-2z"/></svg>
+    <span data-i18n="navAnalysis">Analysis</span>
+  </button>
+  <button class="nav-item" onclick="navigate('insights')">
+    <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2L4.5 20.29l.71.71L12 18l6.79 3 .71-.71z"/></svg>
+    <span data-i18n="navInsights">Insights</span>
+  </button>
+</nav>
+
+<!-- Modal -->
+<div class="modal-overlay" id="modal" onclick="closeModal(event)">
+  <div class="modal-sheet" onclick="event.stopPropagation()">
+    <div class="modal-header">
+      <div class="modal-title" id="modalTitle">Title</div>
+      <button class="modal-close" onclick="closeModal()">✕</button>
+    </div>
+    <div id="modalBody">Content</div>
+  </div>
+</div>
 
 <script>
+// ========================
+// DATA & I18N
+// ========================
+const i18n = {
+  en: {
+    brand:"baqshAI", brandSub:"AgroVision Sentinel",
+    alertTitle:"Early Warning: Field #4", alertDesc:"AI detected pre-symptomatic anthracnose anomaly. 24h advance notice.",
+    statHealthy:"Healthy", statRisk:"At Risk", statCritical:"Critical",
+    sensorsTitle:"Live Sensors", temp:"Temperature", humidity:"Humidity", soil:"Soil Moisture", uv:"UV Index",
+    weatherTitle:"10-Day Forecast", weatherApi:"OpenWeather API",
+    farmHealth:"Farm Health Index", farmHealthSub:"Aggregated from multispectral + IoT fusion",
+    healthPoor:"Poor", healthExcellent:"Excellent",
+    btnViewMap:"View Map", btnFleet:"Fleet",
+    mapTitle:"Field Surveillance", mapSub:"Real-time AI monitoring with georeferenced anomaly detection",
+    layerVisual:"Visual", layerMulti:"Multi", layerThermal:"Thermal", layerDisease:"Disease",
+    hotspotLabel:"Anthracnose",
+    legendHealthy:"Healthy", legendRisk:"At Risk", legendCritical:"Critical",
+    btnAnalyze:"Analyze Hotspot", btnScan:"Launch Scan",
+    fleetTitle:"Drone Fleet", fleetSub:"Autonomous monitoring & precision spraying units",
+    statusFlying:"Flying", statusCharging:"Charging", statusIdle:"Idle",
+    metaBattery:"Battery", metaTank:"Spray Tank", metaMission:"Mission",
+    missionReady:"Ready",
+    btnLaunch:"Launch", btnReturn:"Return", btnStop:"Emergency", btnRefill:"Refill Tank", btnAssign:"Assign Mission",
+    analysisTitle:"AI Analysis Centre", analysisSub:"Explainable AI (XAI) with Grad-CAM visualization",
+    modelDay:"Day Model", modelNight:"Night Thermal", liveInference:"LIVE INFERENCE",
+    diagnosisTitle:"Diagnosis Result", severityCritical:"Critical",
+    diagnosisDesc:"Hybrid CNN-Transformer detected subtle textural changes and thermal differential patterns consistent with early-stage Colletotrichum infection. Pre-symptomatic phase confirmed.",
+    correlationTitle:"Sensor Correlation (Last 72h)", chartHumidity:"Humidity Spike", chartDisease:"Disease Probability",
+    xaiTitle:"Explainability (Grad-CAM)", xaiDesc:"Red zones indicate regions where the model focused to detect early lesion patterns. Yellow zones show secondary contextual features (humidity stress boundaries).",
+    btnInsights:"View Treatment Plan",
+    insightsTitle:"Decision Support", insightsSub:"AI-generated treatment protocol with Variable Rate Application",
+    treatRec:"Recommended Treatment",
+    protocolTitle:"Application Protocol",
+    dosageLabel:"Dosage per Hectare", dosageSub:"Variable rate based on infection severity",
+    waterLabel:"Water Volume", waterSub:"Spot-spray concentration",
+    timingLabel:"Optimal Timing", timingSub:"Before rain event (Thu)",
+    targetTitle:"Target Coordinates", targetSub:"GPS waypoints for VRA spot-spraying mission",
+    savingsTitle:"Projected Savings", savingsDesc:"Targeted spot-spraying reduces chemical usage by 42% compared to blanket application. Estimated cost savings: $340/ha.",
+    btnSendSprayer:"Send to Sprayer Drone", btnDownload:"Download PDF Report",
+    notifTitle:"Notifications", markRead:"Mark all read",
+    notif1Title:"Early Disease Warning", notif1Desc:"Anthracnose pre-symptomatic detection in Field #4 Sector B7.",
+    notif2Title:"Drone Battery Low", notif2Desc:"Sentinel-02 at 22%. Automatic return to base initiated.",
+    notif3Title:"Spray Tank Refill", notif3Desc:"Sentinel-02 tank at 85%. Refill recommended before next mission.",
+    notif4Title:"Scan Mission Complete", notif4Desc:"Sentinel-01 finished Field #3 multispectral scan. 0 anomalies.",
+    notif5Title:"Weather Advisory", notif5Desc:"Rain forecast Thursday 18:00. Complete spraying by Wednesday evening.",
+    missionTitle:"Mission Control", missionSub:"Targeted spot-spraying workflow execution",
+    missionReady:"Ready for Mission", missionDetail:"Sentinel-03 assigned to Field #4 VRA spraying",
+    btnStart:"Start Spraying Mission", btnDashboard:"Return to Dashboard",
+    step1:"AI Path Planning", step1Desc:"Optimizing waypoints for 42% chemical reduction",
+    step2:"Drone Preflight", step2Desc:"Tank load 2.5kg Mancozeb, battery 95%",
+    step3:"Targeted Spraying", step3Desc:"Variable rate application at 5 GPS waypoints",
+    step4:"Verification Scan", step4Desc:"Post-treatment multispectral validation",
+    navHome:"Home", navMap:"Map", navDrones:"Drones", navAnalysis:"Analysis", navInsights:"Insights"
+  },
+  kz: {
+    brand:"baqshAI", brandSub:"AgroVision Sentinel",
+    alertTitle:"Ерте ескерту: #4 өріс", alertDesc:"AI антракноздың алдын ала белгілерін анықтады. 24 сағат алдын ала ескерту.",
+    statHealthy:"Сау", statRisk:"Қауіпті", statCritical:"Қатты",
+    sensorsTitle:"Тірі сенсорлар", temp:"Температура", humidity:"Ылғалдылық", soil:"Топырақ ылғалдылығы", uv:"УК индексі",
+    weatherTitle:"10 күндік болжам", weatherApi:"OpenWeather API",
+    farmHealth:"Шаруашылық денсаулық индексі", farmHealthSub:"Мультиспектралды + IoT деректері",
+    healthPoor:"Нашар", healthExcellent:"Өте жақсы",
+    btnViewMap:"Картаны қарау", btnFleet:"Флот",
+    mapTitle:"Өріс бақылауы", mapSub:"Геореференциялы аномалияны анықтау",
+    layerVisual:"Визуалды", layerMulti:"Мультиспектралды", layerThermal:"Термиялық", layerDisease:"Ауру",
+    hotspotLabel:"Антракноз",
+    legendHealthy:"Сау", legendRisk:"Қауіпті", legendCritical:"Қатты",
+    btnAnalyze:"Нүктені талдау", btnScan:"Сканерлеуді бастау",
+    fleetTitle:"Дрон флоты", fleetSub:"Автономды бақылау және дәлдікті шашу",
+    statusFlying:"Ұшып жатыр", statusCharging:"Зарядталады", statusIdle:"Дайын",
+    metaBattery:"Батарея", metaTank:"Шашу бакы", metaMission:"Миссия",
+    missionReady:"Дайын",
+    btnLaunch:"Іске қосу", btnReturn:"Қайту", btnStop:"Төтенше", btnRefill:"Бакты толтыру", btnAssign:"Миссия тағайындау",
+    analysisTitle:"AI Талдау Орталығы", analysisSub:"Grad-CAM визуализациясымен түсіндірілетін AI",
+    modelDay:"Күнгі модель", modelNight:"Түнгі термиялық", liveInference:"ТІРІ ЛОГИКА",
+    diagnosisTitle:"Диагноз нәтижесі", severityCritical:"Қатты",
+    diagnosisDesc:"Гибридті CNN-Transformer ерте сатындағы Colletotrichum инфекциясына сәйкес келетін мәтіндік өзгерістер мен термиялық айырмашылықтарды анықтады.",
+    correlationTitle:"Сенсор корреляциясы (соңғы 72 сағат)", chartHumidity:"Ылғалдылық өсімі", chartDisease:"Ауру ықтималдығы",
+    xaiTitle:"Түсіндірім (Grad-CAM)", xaiDesc:"Қызыл аймақтар модель ерте зақым үлгілерін анықтауға назар аударған аймақтарды көрсетеді.",
+    btnInsights:"Емдеу жоспарын қарау",
+    insightsTitle:"Шешім қолдауы", insightsSub:"Айнымалы мөлшерде қолдану протоколы",
+    treatRec:"Ұсынылатын емдеу",
+    protocolTitle:"Қолдану протоколы",
+    dosageLabel:"Гектарға доза", dosageSub:"Ауырлық дәрежесіне байланысты айнымалы мөлшер",
+    waterLabel:"Су көлемі", waterSub:"Нүктелік шашу концентрациясы",
+    timingLabel:"Оптималды уақыт", timingSub:"Жаңбырдан бұрын (бейсенбі)",
+    targetTitle:"Мақсатты координаттар", targetSub:"VRA нүктелік шашу миссиясы үшін GPS нүктелері",
+    savingsTitle:"Болжамды үнемдеу", savingsDesc:"Нүктелік шашу химикаттарды 42% қысқартады. Болжамды үнемдеу: $340/га.",
+    btnSendSprayer:"Шашу дронына жіберу", btnDownload:"PDF есепті жүктеу",
+    notifTitle:"Хабарламалар", markRead:"Барлығын оқылды деп белгілеу",
+    notif1Title:"Ауру туралы ерте ескерту", notif1Desc:"#4 өріс B7 секторында антракноздың алдын ала белгілері анықталды.",
+    notif2Title:"Дрон батареясы аз", notif2Desc:"Sentinel-02 22%-да. Автоматты түрде базаға қайту басталды.",
+    notif3Title:"Шашу бакын толтыру", notif3Desc:"Sentinel-02 бакы 85%. Келесі миссиядан бұрын толтыру ұсынылады.",
+    notif4Title:"Сканерлеу миссиясы аяқталды", notif4Desc:"Sentinel-01 #3 өрісті сканерлеуді аяқтады. 0 аномалия.",
+    notif5Title:"Ауа-райы ескертуі", notif5Desc:"Бейсенбіге жаңбыр болжанып отыр. Сәрсенбі кешіне дейін шашуды аяқтаңыз.",
+    missionTitle:"Миссия басқару", missionSub:"Нүктелік шашу жұмыс процесін орындау",
+    missionReady:"Миссияға дайын", missionDetail:"Sentinel-03 #4 өріс VRA шашуына тағайындалды",
+    btnStart:"Шашу миссиясын бастау", btnDashboard:"Басқару панeline",
+    step1:"AI жол жоспарлау", step1Desc:"42% химикатты қысқарту үшін нүктелерді оңтайландыру",
+    step2:"Дрон алдын ала ұшуы", step2Desc:"Бакқа 2,5кг Манкозеб, батарея 95%",
+    step3:"Нүктелік шашу", step3Desc:"5 GPS нүктесінде айнымалы мөлшерде қолдану",
+    step4:"Тексеру сканері", step4Desc:"Емдеуден кейін мультиспектралды растау",
+    navHome:"Басты", navMap:"Карта", navDrones:"Дрондар", navAnalysis:"Талдау", navInsights:"Ұсыныстар"
+  },
+  ru: {
+    brand:"baqshAI", brandSub:"AgroVision Sentinel",
+    alertTitle:"Раннее предупреждение: Поле #4", alertDesc:"ИИ обнаружил предсимптомную аномалию антракноза. Уведомление за 24 часа.",
+    statHealthy:"Здоровые", statRisk:"Риск", statCritical:"Критично",
+    sensorsTitle:"Датчики", temp:"Температура", humidity:"Влажность", soil:"Влажность почвы", uv:"УФ индекс",
+    weatherTitle:"Прогноз на 10 дней", weatherApi:"OpenWeather API",
+    farmHealth:"Индекс здоровья", farmHealthSub:"На основе мультиспектральных + IoT данных",
+    healthPoor:"Плохо", healthExcellent:"Отлично",
+    btnViewMap:"Карта", btnFleet:"Флот",
+    mapTitle:"Мониторинг полей", mapSub:"ИИ-мониторинг с геореференцированным обнаружением аномалий",
+    layerVisual:"Визуальный", layerMulti:"Мультиспектр", layerThermal:"Тепловой", layerDisease:"Болезни",
+    hotspotLabel:"Антракноз",
+    legendHealthy:"Здоровые", legendRisk:"Риск", legendCritical:"Критично",
+    btnAnalyze:"Анализ", btnScan:"Сканировать",
+    fleetTitle:"Флот дронов", fleetSub:"Автономный мониторинг и точное опрыскивание",
+    statusFlying:"В полете", statusCharging:"Зарядка", statusIdle:"Готов",
+    metaBattery:"Батарея", metaTank:"Бак", metaMission:"Миссия",
+    missionReady:"Готов",
+    btnLaunch:"Запуск", btnReturn:"Возврат", btnStop:"СТОП", btnRefill:"Заправка", btnAssign:"Назначить",
+    analysisTitle:"ИИ Анализ", analysisSub:"Explainable AI с Grad-CAM",
+    modelDay:"Дневная модель", modelNight:"Ночная тепловая", liveInference:"ОНЛАЙН",
+    diagnosisTitle:"Результат диагноза", severityCritical:"Критично",
+    diagnosisDesc:"Гибрид CNN-Transformer обнаружил текстурные изменения и тепловые паттерны, характерные для ранней стадии Colletotrichum.",
+    correlationTitle:"Корреляция сенсоров (72ч)", chartHumidity:"Всплеск влажности", chartDisease:"Вероятность болезни",
+    xaiTitle:"Объяснимость (Grad-CAM)", xaiDesc:"Красные зоны — области фокуса модели для обнаружения ранних поражений. Желтые — вторичные признаки.",
+    btnInsights:"План лечения",
+    insightsTitle:"Поддержка решений", insightsSub:"Протокол точного внесения с VRA",
+    treatRec:"Рекомендуемое лечение",
+    protocolTitle:"Протокол применения",
+    dosageLabel:"Доза на гектар", dosageSub:"Переменная норма по степени заражения",
+    waterLabel:"Объем воды", waterSub:"Концентрация точечного опрыскивания",
+    timingLabel:"Оптимальное время", timingSub:"До дождя (четверг)",
+    targetTitle:"Целевые координаты", targetSub:"GPS точки для точечного опрыскивания",
+    savingsTitle:"Экономия", savingsDesc:"Точечное опрыскивание сокращает расход химикатов на 42%. Экономия: $340/га.",
+    btnSendSprayer:"Отправить дрон", btnDownload:"Скачать PDF",
+    notifTitle:"Уведомления", markRead:"Отметить прочитанными",
+    notif1Title:"Раннее предупреждение", notif1Desc:"Предсимптомное обнаружение антракноза в Поле #4, сектор B7.",
+    notif2Title:"Низкий заряд", notif2Desc:"Sentinel-02 на 22%. Автовозврат на базу.",
+    notif3Title:"Заправка бака", notif3Desc:"Sentinel-02 бак 85%. Рекомендуется заправка.",
+    notif4Title:"Сканирование завершено", notif4Desc:"Sentinel-01 завершил сканирование Поля #3. 0 аномалий.",
+    notif5Title:"Прогноз погоды", notif5Desc:"Дождь в четверг 18:00. Завершить опрыскивание до среды.",
+    missionTitle:"Управление миссией", missionSub:"Точечное опрыскивание",
+    missionReady:"Готов к миссии", missionDetail:"Sentinel-03 назначен на Поле #4",
+    btnStart:"Начать миссию", btnDashboard:"На главную",
+    step1:"Планирование", step1Desc:"Оптимизация маршрута для экономии 42% химикатов",
+    step2:"Предполетная подготовка", step2Desc:"Загрузка 2.5кг Манкоцеба, батарея 95%",
+    step3:"Точечное опрыскивание", step3Desc:"Переменная норма на 5 GPS точках",
+    step4:"Проверка", step4Desc:"Постобработочное мультиспектральное сканирование",
+    navHome:"Главная", navMap:"Карта", navDrones:"Дроны", navAnalysis:"Анализ", navInsights:"Решения"
+  }
+};
 
-function navigateTo(pageId, el){
+let currentLang = 'en';
+let currentPage = 'dashboard';
 
-  document.querySelectorAll('.page')
-  .forEach(p => p.classList.remove('active'));
+function setLang(lang) {
+  currentLang = lang;
+  document.querySelectorAll('.lang-switch button').forEach(b => b.classList.remove('active'));
+  document.querySelector(`.lang-switch button:nth-child(${lang==='en'?1:lang==='kz'?2:3})`).classList.add('active');
+  document.querySelectorAll('[data-i18n]').forEach(el => {
+    const key = el.getAttribute('data-i18n');
+    if (i18n[lang][key]) el.textContent = i18n[lang][key];
+  });
+}
 
-  document.getElementById(pageId)
-  .classList.add('active');
+function navigate(page) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.getElementById(page).classList.add('active');
+  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+  const idx = ['dashboard','map','drones','analysis','insights'].indexOf(page);
+  if (idx >= 0) document.querySelectorAll('.nav-item')[idx]?.classList.add('active');
+  currentPage = page;
+  window.scrollTo(0,0);
+}
 
-  if(el){
+// Weather data
+const weatherData = [
+  {d:'Mon',i:'☀️',t:'24°',r:''},{d:'Tue',i:'☀️',t:'26°',r:''},{d:'Wed',i:'⛅',t:'22°',r:''},
+  {d:'Thu',i:'🌧️',t:'18°',r:'12mm'},{d:'Fri',i:'🌤️',t:'25°',r:''},{d:'Sat',i:'☀️',t:'27°',r:''},
+  {d:'Sun',i:'☀️',t:'28°',r:''},{d:'Mon',i:'⛅',t:'23°',r:''},{d:'Tue',i:'🌧️',t:'19°',r:'8mm'},{d:'Wed',i:'☀️',t:'24°',r:''}
+];
+document.getElementById('weatherStrip').innerHTML = weatherData.map(w => 
+  `<div class="weather-day"><div class="weather-day-name">${w.d}</div><div class="weather-day-icon">${w.i}</div><div class="weather-day-temp">${w.t}</div>${w.r?`<div class="weather-day-rain">${w.r}</div>`:''}</div>`
+).join('');
 
-    document.querySelectorAll('.nav-item')
-    .forEach(item => item.classList.remove('active'));
-
-    el.classList.add('active');
+// Map layer switching
+function setMapLayer(layer) {
+  document.querySelectorAll('.map-layer-ctrl button').forEach(b => b.classList.remove('active'));
+  event.target.classList.add('active');
+  const map = document.getElementById('mapContainer');
+  if (layer === 'thermal') {
+    map.style.filter = 'hue-rotate(180deg) saturate(2)';
+  } else if (layer === 'disease') {
+    map.style.filter = 'contrast(1.3) sepia(0.6) hue-rotate(-50deg)';
+  } else if (layer === 'multi') {
+    map.style.filter = 'saturate(2.5) hue-rotate(30deg)';
+  } else {
+    map.style.filter = 'none';
   }
 }
 
-function runWorkflow(){
-
-  const btn =
-    document.getElementById('start-btn');
-
-  const status =
-    document.getElementById('flow-status');
-
-  const progress =
-    document.getElementById('flow-progress');
-
-  const bar =
-    document.getElementById('flow-bar');
-
-  const visual =
-    document.getElementById('flow-visual');
-
-  btn.disabled = true;
-
-  status.innerText =
-    "Initializing AI System...";
-
-  visual.innerText = "🛰️";
-
-  setTimeout(() => {
-
-    status.innerText =
-      "Scanning Crop Health...";
-
-    visual.innerText = "📡";
-
-  }, 1500);
-
-  setTimeout(() => {
-
-    progress.style.display = "block";
-
-    status.innerText =
-      "Drone Launching...";
-
-    visual.innerText = "🚁";
-
-  }, 3000);
-
-  setTimeout(() => {
-
-    status.innerText =
-      "Targeted Spraying Started...";
-
-    let p = 0;
-
-    const interval = setInterval(() => {
-
-      p += 4;
-
-      bar.style.width = p + "%";
-
-      if(p >= 100){
-
-        clearInterval(interval);
-
-        visual.innerText = "✅";
-
-        status.innerText =
-          "Mission Completed Successfully!";
-
-        document
-        .getElementById('successSound')
-        .play();
-
-        btn.disabled = false;
-
-        btn.innerText =
-          "Return to Dashboard";
-
-        btn.onclick = () =>
-          navigateTo('main');
-
-      }
-
-    }, 140);
-
-  }, 4500);
-
+function selectField(id) {
+  if (id === 4) navigate('analysis');
+  else showModal(`Field #${id}`, `Field #${id} status: ${id===1||id===3?'Healthy':'At Risk'}. No immediate action required.`);
 }
 
+function launchScan() {
+  showModal('Scan Launched', 'Sentinel-03 is taking off for multispectral field survey. Estimated completion: 18 minutes.');
+}
+
+function droneAction(action, id) {
+  const names = ['','Sentinel-01','Sentinel-02','Sentinel-03'];
+  const msgs = {
+    return: `${names[id]} returning to base. ETA 4 minutes.`,
+    stop: `EMERGENCY STOP issued for ${names[id]}. Motors shutting down.`,
+    launch: `${names[id]} launching to assigned sector.`,
+    refill: `Ground crew notified to refill ${names[id]} spray tank.`,
+    mission: `Mission assignment panel opened for ${names[id]}.`
+  };
+  showModal('Drone Command', msgs[action]);
+}
+
+function setModel(mode) {
+  document.querySelectorAll('.model-toggle button').forEach(b => b.classList.remove('active'));
+  event.target.classList.add('active');
+}
+
+function sendToSprayer() {
+  navigate('spray');
+}
+
+function downloadReport() {
+  showModal('Report Generated', 'PDF treatment report for Field #4 has been downloaded. Includes: diagnosis, coordinates, dosage calculations, and compliance log.');
+}
+
+function markAllRead() {
+  document.querySelectorAll('.notif-item').forEach(n => n.classList.remove('unread'));
+  document.getElementById('notifBadge').style.display = 'none';
+}
+
+function openNotif(idx) {
+  const titles = ['Early Disease Warning','Drone Battery Low','Spray Tank Refill','Scan Complete','Weather Advisory'];
+  showModal(titles[idx], 'Notification details expanded. Full sensor logs and drone telemetry attached.');
+}
+
+// Mission workflow
+function runMission() {
+  const btn = document.getElementById('startMissionBtn');
+  const visual = document.getElementById('missionVisual');
+  const status = document.getElementById('missionStatus');
+  const detail = document.getElementById('missionDetail');
+  const progress = document.getElementById('missionProgress');
+  const bar = document.getElementById('missionBar');
+  const pct = document.getElementById('missionPercent');
+  const stepText = document.getElementById('missionStepText');
+  const returnBtn = document.getElementById('returnBtn');
+
+  btn.disabled = true;
+  btn.classList.add('hidden');
+  progress.style.display = 'block';
+
+  const steps = [
+    {el:'step1',txt:'AI Path Planning...',icon:'🛰️',pct:10},
+    {el:'step2',txt:'Drone Preflight...',icon:'🔋',pct:30},
+    {el:'step3',txt:'Targeted Spraying...',icon:'🚁',pct:70},
+    {el:'step4',txt:'Verification Scan...',icon:'📡',pct:95}
+  ];
+
+  let step = 0;
+  let p = 0;
+
+  const interval = setInterval(() => {
+    p += 1.5;
+    if (p > 100) p = 100;
+    bar.style.width = p + '%';
+    pct.textContent = Math.floor(p) + '%';
+
+    if (step < steps.length && p >= steps[step].pct) {
+      document.getElementById(steps[step].el).classList.add('active');
+      visual.textContent = steps[step].icon;
+      stepText.textContent = steps[step].txt;
+      status.textContent = steps[step].txt;
+      step++;
+    }
+
+    if (p >= 100) {
+      clearInterval(interval);
+      visual.textContent = '✅';
+      status.textContent = 'Mission Completed!';
+      status.style.color = 'var(--accent)';
+      detail.textContent = 'Field #4 VRA spraying complete. 2.5kg Mancozeb applied across 5 waypoints. Chemical savings: 42%.';
+      stepText.textContent = 'Done';
+      returnBtn.classList.remove('hidden');
+      document.getElementById('notifBadge').style.display = 'inline-grid';
+      document.getElementById('notifBadge').textContent = '4';
+    }
+  }, 80);
+}
+
+// Modal system
+function showModal(title, body) {
+  document.getElementById('modalTitle').textContent = title;
+  document.getElementById('modalBody').innerHTML = `<p style="font-size:0.9rem;color:var(--text-secondary);line-height:1.5;">${body}</p>`;
+  document.getElementById('modal').classList.add('active');
+}
+function closeModal(e) {
+  if (!e || e.target.id === 'modal') document.getElementById('modal').classList.remove('active');
+}
+
+// Init
+setLang('en');
 </script>
 
 </body>
